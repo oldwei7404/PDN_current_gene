@@ -1,0 +1,17 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: Current File",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args":["-d C:\\Users\\jiangongwei\\OneDrive - Rivian Automotive, LLC\\Documents\\Rivian_work\\script_py\\PDN_current_gene\\PDN_current_gene", "-i input.params", "-o out_curr_profile.txt"]
+            //"justMyCode": true 
+        }
+    ]
+}
