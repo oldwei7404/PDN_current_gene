@@ -163,6 +163,25 @@ class CurrWaveform:
         fout.close()
         print('#INFO: Current waveform TIM format output to ' + fileName)
 
+    def PlotWaveform(self):
+        plt.rcParams.update({'font.size': 15})
+        plt.plot(self.currWaveform_list_time_ns, self.currWaveform_list_curr_Amp, 'b', linewidth=0.2, label='Waveform')
+        plt.legend(loc=1)
+        plt.xlabel('Time (ns)', fontsize=14, weight='bold')
+        plt.ylabel('Current(Amp)', fontsize=14, weight='bold')
+        plt.title('Current Profle')
+
+        ax = plt.subplot(111)
+        plt.grid(True, which='both')	
+        ax.grid(which='major', linewidth=0.8)
+        ax.grid(which='minor', linestyle=':', linewidth=0.5)
+        ax.minorticks_on()        
+        plt.savefig(file_dir + 'current_waveform.png', dpi = 600)
+        plt.show()
+        plt.clf()
+        plt.close()
+	
+
 # Main function 
 try:
 	opts,args = getopt.getopt(sys.argv[1:],'d:i:o:')
@@ -201,7 +220,9 @@ waveformInst = CurrWaveform(file_in_para)
 waveformInst.CompositeWaveform()
 waveformInst.WriteWaveform(file_out_waveform)
 waveformInst.WriteWaveform_InTimFormat(file_out_waveform)
+waveformInst.PlotWaveform()
 
+print ("INFO: Waveform generation exit normally")
 ### interp1d should be enough: https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html#scipy.interpolate.interp1d
 ### unstructured interpolation: https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html#scipy.interpolate.griddata
 
