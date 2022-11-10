@@ -10,6 +10,7 @@ import scipy.interpolate
 file_dir = ""
 file_in_para = ""
 file_out_waveform = ""
+voltage = 0.
 waveform_params_list = []
 
 ###
@@ -17,6 +18,11 @@ class CurrWaveform:
     currWaveform_list_time_ns = []  # unit: ns
     currWaveform_list_curr_Amp = []   # unit: Amp
     waveform_params_list = []
+
+    ### list of for scaling profiles, can support multiple profiles
+    src_profile_envelope_fileName = ""
+    src_profile_envelope_time_unit_in_sec = 1.
+    src_profile_envelope_waveform_unit = 1.
 
     clk_freq = 0
     T_clk = 0
@@ -26,12 +32,14 @@ class CurrWaveform:
     t_fall_ratio_T = 0.1
     nominal_I = 1.0
     I_lkg = 1.0
+    voltage = 0.0
 
     currWaveform_list_time_ns.append(0)
     currWaveform_list_curr_Amp.append(0)
 
     ### Function: Read in waveform parameters
-    def __init__(self, file_in_para):
+    def __init__(self, file_in_para, voltage_):
+        self.voltage = voltage_
         line_cnt = 0
         wf_cnt = 0
         with open(r'%s'%file_in_para, 'r') as fin:
@@ -114,29 +122,96 @@ class CurrWaveform:
             else:
                 self.AddOneUnit(I_floor, I_floor)
 
+    def AddScalingCurr(self):
+        ### read in source file
+        if not os.path.exists(self.src_profile_envelope_fileName):
+            print('ERROR: Source profile envelope file <' + self.src_profile_envelope_fileName + '> does not exist !')
+            sys.exit(1)
+
+        src_profile_time_in_ns = []
+        src_profile_amplitude  = []
+
+        with open(r'%s'%self.src_profile_envelope_fileName, 'r') as fin:
+            cln_str = fin.readline()
+            time_ST = 0
+            time_st_fnd = False
+            while cln_str:
+                cln_str_src = cln_str.lstrip(' ').rstrip('\n')
+                if cln_str_src == '' or cln_str_src[0] == '#':
+                    cln_str = fin.readline()
+                    continue    
+
+                cln_str = cln_str_src.split()   
+                time_ns = float(cln_str[0]) * self.src_profile_envelope_time_unit_in_sec * 1.e9
+                if not time_st_fnd:
+                    time_ST = time_ns
+                    time_st_fnd = True
+
+                src_profile_time_in_ns.append(time_ns - time_ST)    ### nominal profile starts from 0
+                ### Note: divided by voltage to obtian current
+                curr_ = float(cln_str[1]) / self.voltage
+                src_profile_amplitude.append( curr_ )     
+                cln_str = fin.readline()
+        fin.close()
+        #### interpolate 
+        time_len = src_profile_time_in_ns[-1] - src_profile_time_in_ns[0]
+        numOfUnit = int( time_len / self.T_clk_in_ns)
+        func_intep = scipy.interpolate.interp1d(src_profile_time_in_ns, src_profile_amplitude)
+
+        for i in range (0, numOfUnit):
+            time_ = i * self.T_clk_in_ns
+            amp_ = func_intep(time_)
+            I_floor = 0.
+            self.AddOneUnit(amp_, I_floor)
+        
+
+
     ### Function: compose the actual waveform based on parameters
     def CompositeWaveform(self):
         for wfp in self.waveform_params_list:
             wfp = wfp.split()
-            
-            time_wf_ns = float( wfp[1])
+            time_wf_ns = 0.
+
+            if wfp[0] != 'D':
+                time_wf_ns = float( wfp[1])
             numOfUnit =  int(time_wf_ns/ self.T_clk_in_ns)
         
             if wfp[0] == 'A':
+                if len(wfp) < 4:
+                    print("#ERROR: waveform type A parameters insufficient: " + wfp)
+                    sys.exit(1)
+
                 I_curr = float( wfp[2])
                 I_floor = float( wfp[3])
                 self.AddConstCLK(numOfUnit, I_curr, I_floor)
             elif wfp[0] == 'B':
+                if len(wfp) < 5:
+                    print("#ERROR: waveform type B parameters insufficient: " + wfp)
+                    sys.exit(1)
+
                 I_start = float( wfp[2])
                 I_end = float( wfp[3])
                 I_floor = float( wfp[4])          
                 self.AddLinearSlopeCurr(numOfUnit, I_start, I_end, I_floor)
             elif wfp[0] == 'C':
+                if len(wfp) < 6:
+                    print("#ERROR: waveform type C parameters insufficient: " + wfp)
+                    sys.exit(1)               
+
                 I_curr = float( wfp[2])
                 I_floor = float( wfp[3])
                 numOfConsecutiveClk = int( wfp[4])
                 numOfSkippedClk = int( wfp[5])
                 self.AddClkGatingCurr(numOfUnit, I_curr, I_floor, numOfConsecutiveClk, numOfSkippedClk)
+            elif wfp[0] == 'D':
+                if len(wfp) < 4:
+                    print("#ERROR: waveform type D parameters insufficient: " + wfp)
+                    sys.exit(1)
+
+                self.src_profile_envelope_fileName = wfp[1]
+                self.src_profile_envelope_time_unit_in_sec = float(wfp[2]) 
+                self.src_profile_envelope_waveform_unit = float(wfp[3])
+                self.AddScalingCurr()
 
     def WriteWaveform(self, fileName):
         fout = open(fileName, 'w+')
@@ -184,24 +259,27 @@ class CurrWaveform:
 
 # Main function 
 try:
-	opts,args = getopt.getopt(sys.argv[1:],'d:i:o:')
+	opts,args = getopt.getopt(sys.argv[1:],'d:i:o:v:')
 except getopt.GetoptError:
-	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim]')
+	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-v voltage]')
 	sys.exit(2)
 if (not opts) and args:
-	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim]')
+	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-v voltage]')
 	sys.exit(2)
 
 for o,a in opts:
-    if o=='-d':
+    if o =='-d':
         if os.name == 'nt':
             file_dir = a.lstrip(' ').rstrip(' ') + '\\'
         else:
             file_dir = a.lstrip(' ').rstrip(' ') + '/'
-    if o=='-i':
+    if o =='-i':
         file_in_para = a.lstrip(' ').rstrip(' ')
-    if o=='-o':
+    if o =='-o':
         file_out_waveform = a.lstrip(' ').rstrip(' ')
+    if o == '-v':
+        voltage = float(a.lstrip(' ').rstrip(' '))
+
 
 # BEGIN read input parameters
 file_in_para = file_dir + file_in_para
@@ -216,7 +294,7 @@ else:
 
 # END read input parameters
 
-waveformInst = CurrWaveform(file_in_para)
+waveformInst = CurrWaveform(file_in_para, voltage)
 waveformInst.CompositeWaveform()
 waveformInst.WriteWaveform(file_out_waveform)
 waveformInst.WriteWaveform_InTimFormat(file_out_waveform)
