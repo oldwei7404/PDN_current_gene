@@ -149,7 +149,7 @@ class CurrWaveform:
 
                 src_profile_time_in_ns.append(time_ns - time_ST)    ### nominal profile starts from 0
                 ### Note: divided by voltage to obtian current
-                curr_ = float(cln_str[1]) / self.voltage
+                curr_ = float(cln_str[1]) * self.src_profile_envelope_waveform_unit/ self.voltage
                 src_profile_amplitude.append( curr_ )     
                 cln_str = fin.readline()
         fin.close()
@@ -162,9 +162,7 @@ class CurrWaveform:
             time_ = i * self.T_clk_in_ns
             amp_ = func_intep(time_)
             I_floor = 0.
-            self.AddOneUnit(amp_, I_floor)
-        
-
+            self.AddOneUnit(amp_, I_floor)      
 
     ### Function: compose the actual waveform based on parameters
     def CompositeWaveform(self):
@@ -261,10 +259,10 @@ class CurrWaveform:
 try:
 	opts,args = getopt.getopt(sys.argv[1:],'d:i:o:v:')
 except getopt.GetoptError:
-	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-v voltage]')
+	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-v voltage (V)]')
 	sys.exit(2)
 if (not opts) and args:
-	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-v voltage]')
+	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-v voltage (V)]')
 	sys.exit(2)
 
 for o,a in opts:
@@ -280,6 +278,7 @@ for o,a in opts:
     if o == '-v':
         voltage = float(a.lstrip(' ').rstrip(' '))
 
+print('\n#INFO: Start to run waveform generation at '+ str(voltage) + ' V\n')
 
 # BEGIN read input parameters
 file_in_para = file_dir + file_in_para
@@ -301,8 +300,6 @@ waveformInst.WriteWaveform_InTimFormat(file_out_waveform)
 waveformInst.PlotWaveform()
 
 print ("INFO: Waveform generation exit normally")
-### interp1d should be enough: https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.interp1d.html#scipy.interpolate.interp1d
-### unstructured interpolation: https://docs.scipy.org/doc/scipy/reference/generated/scipy.interpolate.griddata.html#scipy.interpolate.griddata
 
 
 

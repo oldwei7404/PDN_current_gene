@@ -1,7 +1,7 @@
 #INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
 #INFO: waveform_type B linear_slope:    Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
 #INFO: waveform_type C clock_gating:    Time_Length_in_ns | current_amplitude | current_floor | Num_of_consecutive_clks | Num_of_skipped_clks
-#INFO: waveform_type D scaled:          "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform unit
+#INFO: waveform_type D scaled:          "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_unit_if_convert_to_1
 #INFO: CLK_Freq unit: GHz
 #INFO: 0.< CLK_DutyCycle <1.
 #INFO: 0. < CLK_T_RISE_as_ratio_of_CLK_Freq < 1.
@@ -19,3 +19,4 @@ B   10  100. 55.    0.
 A   15 55. 0.
 C   20 60. 5.  2   3
 D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.0
+A   10   55.0  0.
