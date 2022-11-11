@@ -38,8 +38,8 @@ class CurrWaveform:
     currWaveform_list_curr_Amp.append(0)
 
     ### Function: Read in waveform parameters
-    def __init__(self, file_in_para, voltage_):
-        self.voltage = voltage_
+    def __init__(self, file_in_para):
+        
         line_cnt = 0
         wf_cnt = 0
         with open(r'%s'%file_in_para, 'r') as fin:
@@ -57,25 +57,29 @@ class CurrWaveform:
                     self.T_clk_in_ns = self.T_clk * 1.e9
                     print('#INFO: CLK freq (GHz):\t' + str(self.clk_freq / 1.e9))
                     print('#INFO: CLK Cycle (ns):\t' + str(self.T_clk_in_ns))
-                    cln_str = fin.readline()
+                    
                 elif cln_str[0] == 'CLK_DutyCycle':
                     self.clk_duty_cycle = float( cln_str[1])
                     print('#INFO: CLK duty cycle:\t' + str(self.clk_duty_cycle))
-                    cln_str = fin.readline()
+                    
                 elif cln_str[0] == 'CLK_T_RISE_as_ratio_of_CLK_Freq':
                     self.t_rise_ratio_T = float( cln_str[1])
                     print('#INFO: CLK rise time (ratio of T):\t' + str(self.t_rise_ratio_T))
-                    cln_str = fin.readline()
+                    
                 elif cln_str[0] == 'CLK_T_FALL_as_ratio_of_CLK_Freq':
                     self.t_fall_ratio_T = float( cln_str[1])
                     print('#INFO: CLK fall time (ratio of T):\t' + str(self.t_rise_ratio_T))
-                    cln_str = fin.readline()
+                    
+                elif cln_str[0] == 'VDD(Volt)':
+                    self.voltage = float(cln_str[1])
+                    print('#INFO: Vdd rail voltage (V):\t' + str(self.voltage))
+
                 else:  # read in waveform params
                     self.waveform_params_list.append(cln_str_src)
                     wf_cnt = wf_cnt + 1
                     print('INFO: Reading waveform def. ' + str(wf_cnt) + ': ' + self.waveform_params_list[-1])
-                    cln_str = fin.readline()
-
+                
+                cln_str = fin.readline()
                 ### sanity check
                 if (self.t_rise_ratio_T + self.t_fall_ratio_T) > self.clk_duty_cycle:
                     print ('#ERROR: summation of clk rise time and fall time ratio cannot exceed duty cycle ratio\n')
@@ -257,12 +261,12 @@ class CurrWaveform:
 
 # Main function 
 try:
-	opts,args = getopt.getopt(sys.argv[1:],'d:i:o:v:')
+	opts,args = getopt.getopt(sys.argv[1:],'d:i:o:')
 except getopt.GetoptError:
-	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-v voltage (V)]')
+	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim]')
 	sys.exit(2)
 if (not opts) and args:
-	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-v voltage (V)]')
+	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim]')
 	sys.exit(2)
 
 for o,a in opts:
@@ -275,10 +279,6 @@ for o,a in opts:
         file_in_para = a.lstrip(' ').rstrip(' ')
     if o =='-o':
         file_out_waveform = a.lstrip(' ').rstrip(' ')
-    if o == '-v':
-        voltage = float(a.lstrip(' ').rstrip(' '))
-
-print('\n#INFO: Start to run waveform generation at '+ str(voltage) + ' V\n')
 
 # BEGIN read input parameters
 file_in_para = file_dir + file_in_para
@@ -292,8 +292,9 @@ else:
     sys.exit(1)
 
 # END read input parameters
+print('\n#INFO: Start to run waveform generation at '+ str(voltage) + ' V\n')
 
-waveformInst = CurrWaveform(file_in_para, voltage)
+waveformInst = CurrWaveform(file_in_para)
 waveformInst.CompositeWaveform()
 waveformInst.WriteWaveform(file_out_waveform)
 waveformInst.WriteWaveform_InTimFormat(file_out_waveform)
