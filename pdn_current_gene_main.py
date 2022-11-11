@@ -1,5 +1,30 @@
 # This script is intended for PDN current profile generation, manipulation 
+# It can support following type of waveforms.
+#INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
+#INFO: waveform_type B linear_slope:    Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
+#INFO: waveform_type C clock_gating:    Time_Length_in_ns | current_amplitude | current_floor | Num_of_consecutive_clks | Num_of_skipped_clks
+#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_unit_if_convert_to_unit_1
+#INFO: 0. < CLK_DutyCycle < 1.
+#INFO: 0. < CLK_T_RISE_as_ratio_of_CLK_Freq < 1.
+#INFO: 0. < CLK_T_FALL_as_ratio_of_CLK_Freq < 1.
+#INFO: 0. < (CLK_T_RISE_as_ratio_of_CLK_Freq + CLK_T_FALL_as_ratio_of_CLK_Freq) < CLK_DutyCycle
 
+### START example input.params
+# VDD_in_Volt  0.75
+# CLK_Freq_in_GHz    3.0
+# CLK_DutyCycle 0.5
+# CLK_T_RISE_as_ratio_of_CLK_Freq 0.07
+# CLK_T_FALL_as_ratio_of_CLK_Freq 0.07
+
+# #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
+# A   10  5.  0.
+# B   10  5.  100.    0.
+# B   10  100. 55.    0.
+# A   15 55. 0.
+# C   20 60. 5.  2   3
+# D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.0
+# A   10   55.0  0.
+### END example input.params
 
 import os, sys, getopt
 import math, cmath
@@ -70,7 +95,7 @@ class CurrWaveform:
                     self.t_fall_ratio_T = float( cln_str[1])
                     print('#INFO: CLK fall time (ratio of T):\t' + str(self.t_rise_ratio_T))
                     
-                elif cln_str[0] == 'VDD(Volt)':
+                elif cln_str[0] == 'VDD_in_Volt':
                     self.voltage = float(cln_str[1])
                     print('#INFO: Vdd rail voltage (V):\t' + str(self.voltage))
 
@@ -301,6 +326,3 @@ waveformInst.WriteWaveform_InTimFormat(file_out_waveform)
 waveformInst.PlotWaveform()
 
 print ("INFO: Waveform generation exit normally")
-
-
-
