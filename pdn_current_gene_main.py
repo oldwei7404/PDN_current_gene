@@ -102,7 +102,7 @@ class CurrWaveform:
                 else:  # read in waveform params
                     self.waveform_params_list.append(cln_str_src)
                     wf_cnt = wf_cnt + 1
-                    print('INFO: Reading waveform def. ' + str(wf_cnt) + ': ' + self.waveform_params_list[-1])
+                    print('#INFO: Reading waveform def. ' + str(wf_cnt) + ': ' + self.waveform_params_list[-1])
                 
                 cln_str = fin.readline()
                 ### sanity check
@@ -263,7 +263,7 @@ class CurrWaveform:
             fout.write(str(self.currWaveform_list_time_ns[i]) + '\t' + str(self.currWaveform_list_curr_Amp[i]) + '\n')  
         fout.write('END' + '\n')
         fout.close()
-        print('#INFO: Current waveform TIM format output to ' + fileName)
+        print('#INFO: Current waveform TIM format output: ' + fileName)
 
     def PlotWaveform(self):
         plt.rcParams.update({'font.size': 15})
@@ -310,10 +310,10 @@ file_in_para = file_dir + file_in_para
 file_out_waveform = file_dir + file_out_waveform
 
 if os.path.exists(file_in_para):
-    print('INFO: input parameters file:    ' + file_in_para)
-    print('INFO: output waveform TIM file: ' + file_out_waveform)
+    print('#INFO: input parameters file:    ' + file_in_para)
+    print('#INFO: output waveform TIM file: ' + file_out_waveform)
 else:
-    print('ERROR: intput parameter file <' + file_in_para + '> does not exist !')
+    print('#ERROR: intput parameter file <' + file_in_para + '> does not exist !')
     sys.exit(1)
 
 # END read input parameters
