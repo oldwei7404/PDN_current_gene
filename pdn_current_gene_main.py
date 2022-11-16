@@ -154,7 +154,7 @@ class CurrWaveform:
     def AddScalingCurr(self):
         ### read in source file
         if not os.path.exists(self.src_profile_envelope_fileName):
-            print('ERROR: Source profile envelope file <' + self.src_profile_envelope_fileName + '> does not exist !')
+            print('#ERROR: Source profile envelope file <' + self.src_profile_envelope_fileName + '> does not exist !')
             sys.exit(1)
 
         src_profile_time_in_ns = []
@@ -325,4 +325,4 @@ waveformInst.WriteWaveform(file_out_waveform)
 waveformInst.WriteWaveform_InTimFormat(file_out_waveform)
 waveformInst.PlotWaveform()
 
-print ("INFO: Waveform generation exit normally")
+print ("#INFO: Waveform generation exit normally")

@@ -1,0 +1,24 @@
+#INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
+#INFO: waveform_type B linear_slope:    Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
+#INFO: waveform_type C clock_gating:    Time_Length_in_ns | current_amplitude | current_floor | Num_of_consecutive_clks | Num_of_skipped_clks
+#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit
+#INFO: CLK_Freq unit: GHz
+#INFO: 0. < CLK_DutyCycle < 1.
+#INFO: 0. < CLK_T_RISE_as_ratio_of_CLK_Freq < 1.
+#INFO: 0. < CLK_T_FALL_as_ratio_of_CLK_Freq < 1.
+#INFO: 0. < (CLK_T_RISE_as_ratio_of_CLK_Freq + CLK_T_FALL_as_ratio_of_CLK_Freq) < CLK_DutyCycle
+
+VDD_in_Volt  0.75
+CLK_Freq_in_GHz    2.0
+CLK_DutyCycle 0.5
+CLK_T_RISE_as_ratio_of_CLK_Freq 0.07
+CLK_T_FALL_as_ratio_of_CLK_Freq 0.07
+
+#INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
+A   10  5.  0.
+B   5  5.  25.    0.
+A   100  25.  0.
+B   5  25.  45.    0.
+A   100  45.  0.
+B   10  45.  5.    0.
+A   1000  5.  0.
