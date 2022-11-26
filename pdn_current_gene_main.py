@@ -27,8 +27,8 @@
 ### END example input.params
 
 import os, sys, getopt
-import math, cmath
-import shutil
+# import math, cmath
+# import shutil
 import matplotlib.pyplot as plt
 import scipy.interpolate
 
@@ -37,6 +37,7 @@ file_in_para = ""
 file_out_waveform = ""
 voltage = 0.
 waveform_params_list = []
+is_print_wf = False
 
 ###
 class CurrWaveform:
@@ -198,7 +199,6 @@ class CurrWaveform:
         for wfp in self.waveform_params_list:
             wfp = wfp.split()
             time_wf_ns = 0.
-
             if wfp[0] != 'D':
                 time_wf_ns = float( wfp[1])
             numOfUnit =  int(time_wf_ns/ self.T_clk_in_ns)
@@ -286,12 +286,12 @@ class CurrWaveform:
 
 # Main function 
 try:
-	opts,args = getopt.getopt(sys.argv[1:],'d:i:o:')
+	opts,args = getopt.getopt(sys.argv[1:],'d:i:o:p')
 except getopt.GetoptError:
-	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim]')
+	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-p]')
 	sys.exit(2)
 if (not opts) and args:
-	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim]')
+	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-p <if waveforms print>]')
 	sys.exit(2)
 
 for o,a in opts:
@@ -304,6 +304,8 @@ for o,a in opts:
         file_in_para = a.lstrip(' ').rstrip(' ')
     if o =='-o':
         file_out_waveform = a.lstrip(' ').rstrip(' ')
+    if o == '-p':
+        is_print_wf = True
 
 # BEGIN read input parameters
 file_in_para = file_dir + file_in_para
@@ -323,6 +325,8 @@ waveformInst = CurrWaveform(file_in_para)
 waveformInst.CompositeWaveform()
 waveformInst.WriteWaveform(file_out_waveform)
 waveformInst.WriteWaveform_InTimFormat(file_out_waveform)
-waveformInst.PlotWaveform()
+
+if is_print_wf:
+    waveformInst.PlotWaveform()
 
 print ("#INFO: Waveform generation exit normally")
