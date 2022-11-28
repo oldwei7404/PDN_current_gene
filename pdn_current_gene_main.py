@@ -253,9 +253,9 @@ class CurrWaveform:
                     print('#ERROR: waveform type E parameters insufficient: ' + wfp)
                     sys.exit(1)
                 else:
-                    I_floor = float(wfp[2])
-                    I_bd_lo = float(wfp[3])
-                    I_bd_up = float(wfp[4])
+                    I_floor = float(wfp[4])
+                    I_bd_lo = float(wfp[2])
+                    I_bd_up = float(wfp[3])
                     if I_bd_lo > I_bd_up:
                         tmp = I_bd_lo
                         I_bd_lo = I_bd_up

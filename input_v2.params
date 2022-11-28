@@ -2,7 +2,7 @@
 #INFO: waveform_type B linear_slope:    Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
 #INFO: waveform_type C clock_gating:    Time_Length_in_ns | current_amplitude | current_floor | Num_of_consecutive_clks | Num_of_skipped_clks
 #INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit
-#INFO: waveform_type E random btw upper/lower bound: Time_Length_in_ns | current_floor | current_lower_bound | current_upper_bound
+#INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor 
 #INFO: CLK_Freq unit: GHz
 #INFO: 0. < CLK_DutyCycle < 1.
 #INFO: 0. < CLK_T_RISE_as_ratio_of_CLK_Freq < 1.
@@ -18,6 +18,6 @@ CLK_T_FALL_as_ratio_of_CLK_Freq 0.07
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 A   10  5.  5.
 B   20  5.  105.    5.
-E   2000 5.  70. 105
+E   200 70. 105.    5.
 #A   10000  105.  5.
 B   100  105.  5.    5.
