@@ -31,6 +31,7 @@ import os, sys, getopt
 # import shutil
 import matplotlib.pyplot as plt
 import scipy.interpolate
+import numpy.random
 
 file_dir = ""
 file_in_para = ""
@@ -194,6 +195,13 @@ class CurrWaveform:
             I_floor = 0.
             self.AddOneUnit(amp_, I_floor)      
 
+    ### Function: Add random current within given upper and lower bound
+    def AddRandWithinRange(self, numOfUnit, I_floor, I_bd_lo, I_bd_up):
+        rng = numpy.random.default_rng()
+        currValList = rng.random((numOfUnit,))
+        for i in currValList:
+            self.AddOneUnit(I_bd_lo + (I_bd_up - I_bd_lo) * i, I_floor)
+
     ### Function: compose the actual waveform based on parameters
     def CompositeWaveform(self):
         for wfp in self.waveform_params_list:
@@ -207,38 +215,53 @@ class CurrWaveform:
                 if len(wfp) < 4:
                     print("#ERROR: waveform type A parameters insufficient: " + wfp)
                     sys.exit(1)
-
-                I_curr = float( wfp[2])
-                I_floor = float( wfp[3])
-                self.AddConstCLK(numOfUnit, I_curr, I_floor)
+                else:
+                    I_curr = float( wfp[2])
+                    I_floor = float( wfp[3])
+                    self.AddConstCLK(numOfUnit, I_curr, I_floor)
             elif wfp[0] == 'B':
                 if len(wfp) < 5:
                     print("#ERROR: waveform type B parameters insufficient: " + wfp)
                     sys.exit(1)
-
-                I_start = float( wfp[2])
-                I_end = float( wfp[3])
-                I_floor = float( wfp[4])          
-                self.AddLinearSlopeCurr(numOfUnit, I_start, I_end, I_floor)
+                else:
+                    I_start = float( wfp[2])
+                    I_end = float( wfp[3])
+                    I_floor = float( wfp[4])          
+                    self.AddLinearSlopeCurr(numOfUnit, I_start, I_end, I_floor)
             elif wfp[0] == 'C':
                 if len(wfp) < 6:
                     print("#ERROR: waveform type C parameters insufficient: " + wfp)
                     sys.exit(1)               
-
-                I_curr = float( wfp[2])
-                I_floor = float( wfp[3])
-                numOfConsecutiveClk = int( wfp[4])
-                numOfSkippedClk = int( wfp[5])
-                self.AddClkGatingCurr(numOfUnit, I_curr, I_floor, numOfConsecutiveClk, numOfSkippedClk)
+                else:
+                    I_curr = float( wfp[2])
+                    I_floor = float( wfp[3])
+                    numOfConsecutiveClk = int( wfp[4])
+                    numOfSkippedClk = int( wfp[5])
+                    self.AddClkGatingCurr(numOfUnit, I_curr, I_floor, numOfConsecutiveClk, numOfSkippedClk)
             elif wfp[0] == 'D':
                 if len(wfp) < 4:
                     print("#ERROR: waveform type D parameters insufficient: " + wfp)
                     sys.exit(1)
+                else:
+                    self.src_profile_envelope_fileName = wfp[1]
+                    self.src_profile_envelope_time_unit_in_sec = float(wfp[2]) 
+                    self.src_profile_envelope_waveform_unit = float(wfp[3])
+                    self.AddScalingCurr()
 
-                self.src_profile_envelope_fileName = wfp[1]
-                self.src_profile_envelope_time_unit_in_sec = float(wfp[2]) 
-                self.src_profile_envelope_waveform_unit = float(wfp[3])
-                self.AddScalingCurr()
+            elif wfp[0] == 'E':
+                if len(wfp) < 5:
+                    print('#ERROR: waveform type E parameters insufficient: ' + wfp)
+                    sys.exit(1)
+                else:
+                    I_floor = float(wfp[2])
+                    I_bd_lo = float(wfp[3])
+                    I_bd_up = float(wfp[4])
+                    if I_bd_lo > I_bd_up:
+                        tmp = I_bd_lo
+                        I_bd_lo = I_bd_up
+                        I_bd_up = tmp 
+                    self.AddRandWithinRange(numOfUnit, I_floor, I_bd_lo, I_bd_up)
+
 
     def WriteWaveform(self, fileName):
         fout = open(fileName, 'w+')
@@ -288,7 +311,7 @@ class CurrWaveform:
 try:
 	opts,args = getopt.getopt(sys.argv[1:],'d:i:o:p')
 except getopt.GetoptError:
-	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-p]')
+	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-p <if waveforms print>]')
 	sys.exit(2)
 if (not opts) and args:
 	print('\nUsage: python pdn_current_gene_main.py [-d file directory] [-i input.params] [-o out_curr_profile.tim] [-p <if waveforms print>]')
