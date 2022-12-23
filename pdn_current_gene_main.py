@@ -3,7 +3,10 @@
 #INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
 #INFO: waveform_type B linear_slope:    Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
 #INFO: waveform_type C clock_gating:    Time_Length_in_ns | current_amplitude | current_floor | Num_of_consecutive_clks | Num_of_skipped_clks
-#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_unit_if_convert_to_unit_1
+#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit
+#INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor 
+#INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end
+#INFO: CLK_Freq unit: GHz
 #INFO: 0. < CLK_DutyCycle < 1.
 #INFO: 0. < CLK_T_RISE_as_ratio_of_CLK_Freq < 1.
 #INFO: 0. < CLK_T_FALL_as_ratio_of_CLK_Freq < 1.
@@ -141,7 +144,16 @@ class CurrWaveform:
         for i in range(0, numOfUnit):
             I_tmp = I_start + (i+1) * I_step
             self.AddOneUnit(I_tmp, I_floor)
-
+    
+    def AddLinearSlopeCurr_noClk(self, numOfUnit, I_start, I_end):
+        I_step = (I_end - I_start)/numOfUnit
+        for i in range(0, numOfUnit):
+            I_tmp = I_start + (i+1) * I_step
+            tStart = self.currWaveform_list_time_ns[-1]
+            self.currWaveform_list_time_ns.append(tStart + 0.25 * self.T_clk_in_ns)
+            self.currWaveform_list_curr_Amp.append(I_tmp + 0.25 * I_step)
+            self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns)
+            self.currWaveform_list_curr_Amp.append(I_tmp + I_step)           
 
     ### Function: Append current demonstrated gated clk cycles, could be multiple patterns
     ### skip numOfSkippedClk, after numOfConsecutiveClk
@@ -247,7 +259,6 @@ class CurrWaveform:
                     self.src_profile_envelope_time_unit_in_sec = float(wfp[2]) 
                     self.src_profile_envelope_waveform_unit = float(wfp[3])
                     self.AddScalingCurr()
-
             elif wfp[0] == 'E':
                 if len(wfp) < 5:
                     print('#ERROR: waveform type E parameters insufficient: ' + wfp)
@@ -261,6 +272,15 @@ class CurrWaveform:
                         I_bd_lo = I_bd_up
                         I_bd_up = tmp 
                     self.AddRandWithinRange(numOfUnit, I_floor, I_bd_lo, I_bd_up)
+            elif wfp[0] == 'F':
+                if len(wfp) < 5:
+                    print("#ERROR: waveform type F parameters insufficient: " + wfp)
+                    sys.exit(1)
+                else:
+                    I_start = float( wfp[2])
+                    I_end = float( wfp[3])
+                    I_floor = float( wfp[4])          
+                    self.AddLinearSlopeCurr_noClk(numOfUnit, I_start, I_end)
 
 
     def WriteWaveform(self, fileName):
