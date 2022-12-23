@@ -273,13 +273,12 @@ class CurrWaveform:
                         I_bd_up = tmp 
                     self.AddRandWithinRange(numOfUnit, I_floor, I_bd_lo, I_bd_up)
             elif wfp[0] == 'F':
-                if len(wfp) < 5:
+                if len(wfp) < 4:
                     print("#ERROR: waveform type F parameters insufficient: " + wfp)
                     sys.exit(1)
                 else:
                     I_start = float( wfp[2])
-                    I_end = float( wfp[3])
-                    I_floor = float( wfp[4])          
+                    I_end = float( wfp[3])        
                     self.AddLinearSlopeCurr_noClk(numOfUnit, I_start, I_end)
 
 
