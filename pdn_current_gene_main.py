@@ -3,7 +3,7 @@
 #INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
 #INFO: waveform_type B linear_slope:    Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
 #INFO: waveform_type C clock_gating:    Time_Length_in_ns | current_amplitude | current_floor | Num_of_consecutive_clks | Num_of_skipped_clks
-#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit
+#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor
 #INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor 
 #INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end
 #INFO: CLK_Freq unit: GHz
@@ -25,7 +25,7 @@
 # B   10  100. 55.    0.
 # A   15 55. 0.
 # C   20 60. 5.  2   3
-# D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.0
+# D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.0  4.
 # A   10   55.0  0.
 ### END example input.params
 
@@ -165,7 +165,7 @@ class CurrWaveform:
             else:
                 self.AddOneUnit(I_floor, I_floor)
 
-    def AddScalingCurr(self):
+    def AddScalingCurr(self, I_floor):
         ### read in source file
         if not os.path.exists(self.src_profile_envelope_fileName):
             print('#ERROR: Source profile envelope file <' + self.src_profile_envelope_fileName + '> does not exist !')
@@ -204,7 +204,9 @@ class CurrWaveform:
         for i in range (0, numOfUnit):
             time_ = i * self.T_clk_in_ns
             amp_ = func_intep(time_)
-            I_floor = 0.
+            #### current amplitude scaled such that charge is const
+            amp_ = amp_ / (self.clk_duty_cycle - 0.5 * self.t_rise_ratio_T - 0.5 * self.t_fall_ratio_T)
+
             self.AddOneUnit(amp_, I_floor)      
 
     ### Function: Add random current within given upper and lower bound
@@ -251,13 +253,14 @@ class CurrWaveform:
                     numOfSkippedClk = int( wfp[5])
                     self.AddClkGatingCurr(numOfUnit, I_curr, I_floor, numOfConsecutiveClk, numOfSkippedClk)
             elif wfp[0] == 'D':
-                if len(wfp) < 4:
+                if len(wfp) < 5:
                     print("#ERROR: waveform type D parameters insufficient: " + wfp)
                     sys.exit(1)
                 else:
                     self.src_profile_envelope_fileName = wfp[1]
                     self.src_profile_envelope_time_unit_in_sec = float(wfp[2]) 
                     self.src_profile_envelope_waveform_unit = float(wfp[3])
+                    I_floor = float(wfp[4])
                     self.AddScalingCurr()
             elif wfp[0] == 'E':
                 if len(wfp) < 5:
