@@ -252,7 +252,7 @@ class CurrWaveform:
                     numOfConsecutiveClk = int( wfp[4])
                     numOfSkippedClk = int( wfp[5])
                     self.AddClkGatingCurr(numOfUnit, I_curr, I_floor, numOfConsecutiveClk, numOfSkippedClk)
-            elif wfp[0] == 'D':
+            elif wfp[0] == 'D': 
                 if len(wfp) < 5:
                     print("#ERROR: waveform type D parameters insufficient: " + wfp)
                     sys.exit(1)
