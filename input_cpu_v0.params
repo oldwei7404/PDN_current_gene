@@ -11,7 +11,7 @@
 #INFO: 0. < (CLK_T_RISE_as_ratio_of_CLK_Freq + CLK_T_FALL_as_ratio_of_CLK_Freq) < CLK_DutyCycle
 
 VDD_in_Volt  0.75
-CLK_Freq_in_GHz    2.133
+CLK_Freq_in_GHz    2.5
 CLK_DutyCycle 0.9
 CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
 CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
@@ -19,8 +19,8 @@ CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 
 #NOTE: based on 1/12/2023 Reji updated power, peak current & ramp up speed estimated by Jiangong, pending response from Ryan
-F   500   3   3
-B   100  3.   16    3.
-B   50  16  10    3.
-E   1000 3.  16   3.
-B   100  16  3.    3.
+F   10   0   0
+B   100  0.   16    0.
+B   50  16  13    0.
+E   1000 6.  13   0.
+B   100  10  3.   0.

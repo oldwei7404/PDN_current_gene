@@ -2,10 +2,12 @@
 # It can support following type of waveforms.
 #INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
 #INFO: waveform_type B linear_slope:    Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
-#INFO: waveform_type C clock_gating:    Time_Length_in_ns | current_amplitude | current_floor | Num_of_consecutive_clks | Num_of_skipped_clks
 #INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor
 #INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor 
 #INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end
+
+#INFO: append Num of consecutive clocks and skipped clock number after waveform_type to activate clk gating, hence waveform_type C is retired
+
 #INFO: CLK_Freq unit: GHz
 #INFO: 0. < CLK_DutyCycle < 1.
 #INFO: 0. < CLK_T_RISE_as_ratio_of_CLK_Freq < 1.
@@ -15,11 +17,11 @@
 ### START example input.params
 # VDD_in_Volt  0.75
 # CLK_Freq_in_GHz    3.0
-# CLK_DutyCycle 0.5
-# CLK_T_RISE_as_ratio_of_CLK_Freq 0.07
-# CLK_T_FALL_as_ratio_of_CLK_Freq 0.07
+# CLK_DutyCycle 0.9
+# CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
+# CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
 
-# #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
+##INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 # A   10  5.  0.
 # B   10  5.  100.    0.
 # B   10  100. 55.    0.
@@ -27,6 +29,10 @@
 # C   20 60. 5.  2   3
 # D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.0  4.
 # A   10   55.0  0.
+
+##INFO: examples to activate clk gating (ccontinue 3 clks, skip 2 clks, repeat)
+# B   10  5.  100.    0.    4   1
+# B   10  100. 55.    0.    3   2
 ### END example input.params
 
 import os, sys, getopt
@@ -63,6 +69,11 @@ class CurrWaveform:
     nominal_I = 1.0
     I_lkg = 1.0
     voltage = 0.0
+
+    ### these 3 paras are per waveform, will be overwritten by next waveform
+    is_clk_gating = False
+    numOfConsecutiveClk = 0
+    numOfSkippedClk = 0
 
     currWaveform_list_time_ns.append(0)
     currWaveform_list_curr_Amp.append(0)
@@ -116,34 +127,65 @@ class CurrWaveform:
                     sys.exit(1)
         fin.close()
 
+    def ClkGatingClear(self):
+        self.is_clk_gating = False
+        self.numOfConsecutiveClk = 0
+        self.numOfSkippedClk = 0
+
+    def ReadClkGatingInfo(self, numOfConsecutiveClk_, numOfSkippedClk_, waveFormName):
+        self.is_clk_gating = True 
+        self.numOfConsecutiveClk = numOfConsecutiveClk_
+        self.numOfSkippedClk = numOfSkippedClk_
+        print("#INFO: waveform type "+ waveFormName+" clk gating enabled, consecutive/skipped clk = " + str(self.numOfConsecutiveClk) + ' / ' + str(self.numOfSkippedClk))
 
     ### Function: Add one unit
-    def AddOneUnit(self, I_amp, I_floor):
-        tStart = self.currWaveform_list_time_ns[-1]
-        self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.t_rise_ratio_T)
-        self.currWaveform_list_curr_Amp.append(I_amp)
+    ### Optional clk gating: parameters after "I_floor" is optional to enable clk gating
+    def AddOneUnit(self, I_amp, I_floor, clk_seq = 0):
+        ### no clk gating
+        if not self.is_clk_gating:
+            tStart = self.currWaveform_list_time_ns[-1]
+            self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.t_rise_ratio_T)
+            self.currWaveform_list_curr_Amp.append(I_amp)
 
-        self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.clk_duty_cycle - self.T_clk_in_ns*self.t_fall_ratio_T)
-        self.currWaveform_list_curr_Amp.append(I_amp)
+            self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.clk_duty_cycle - self.T_clk_in_ns*self.t_fall_ratio_T)
+            self.currWaveform_list_curr_Amp.append(I_amp)
 
-        self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.clk_duty_cycle)
-        self.currWaveform_list_curr_Amp.append(I_floor)
+            self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.clk_duty_cycle)
+            self.currWaveform_list_curr_Amp.append(I_floor)
 
-        self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns)
-        self.currWaveform_list_curr_Amp.append(I_floor)
+            self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns)
+            self.currWaveform_list_curr_Amp.append(I_floor)
+            return ### exit function if no clk gating
 
+        ### continue if clk gated 
+        rem = clk_seq % (self.numOfConsecutiveClk + self.numOfSkippedClk)
+        if rem < self.numOfConsecutiveClk:
+            tStart = self.currWaveform_list_time_ns[-1]
+            self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.t_rise_ratio_T)
+            self.currWaveform_list_curr_Amp.append(I_amp)
+
+            self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.clk_duty_cycle - self.T_clk_in_ns*self.t_fall_ratio_T)
+            self.currWaveform_list_curr_Amp.append(I_amp)
+
+            self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.clk_duty_cycle)
+            self.currWaveform_list_curr_Amp.append(I_floor)
+
+            self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns)
+            self.currWaveform_list_curr_Amp.append(I_floor)
+        else:
+            self.AddOneUnit(I_floor, I_floor)
 
     ### Function: Append time length of nominal clk current
     def AddConstCLK(self, NumOfUnit, I_amp, I_floor):
         for i in range (0, NumOfUnit):
-            self.AddOneUnit(I_amp, I_floor )
+            self.AddOneUnit(I_amp, I_floor, i)
 
     ### Function: Append linear ramp up curent from I_start to I_end witihn t_ramp time
     def AddLinearSlopeCurr(self, numOfUnit, I_start, I_end, I_floor):
         I_step = (I_end - I_start)/numOfUnit
         for i in range(0, numOfUnit):
             I_tmp = I_start + (i+1) * I_step
-            self.AddOneUnit(I_tmp, I_floor)
+            self.AddOneUnit(I_tmp, I_floor, i)
     
     def AddLinearSlopeCurr_noClk(self, numOfUnit, I_start, I_end):
         I_step = (I_end - I_start)/numOfUnit
@@ -154,16 +196,6 @@ class CurrWaveform:
             self.currWaveform_list_curr_Amp.append(I_tmp + 0.25 * I_step)
             self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns)
             self.currWaveform_list_curr_Amp.append(I_tmp + I_step)           
-
-    ### Function: Append current demonstrated gated clk cycles, could be multiple patterns
-    ### skip numOfSkippedClk, after numOfConsecutiveClk
-    def AddClkGatingCurr(self, numOfUnit, I_amp, I_floor, numOfConsecutiveClk, numOfSkippedClk):
-        for i in range (0, numOfUnit):
-            rem = i % (numOfConsecutiveClk + numOfSkippedClk)
-            if rem < numOfConsecutiveClk:
-                self.AddOneUnit(I_amp, I_floor)
-            else:
-                self.AddOneUnit(I_floor, I_floor)
 
     def AddScalingCurr(self, I_floor):
         ### read in source file
@@ -207,20 +239,23 @@ class CurrWaveform:
             #### current amplitude scaled such that charge is const
             amp_ = amp_ / (self.clk_duty_cycle - 0.5 * self.t_rise_ratio_T - 0.5 * self.t_fall_ratio_T)
 
-            self.AddOneUnit(amp_, I_floor)      
+            self.AddOneUnit(amp_, I_floor, i)      
 
     ### Function: Add random current within given upper and lower bound
     def AddRandWithinRange(self, numOfUnit, I_floor, I_bd_lo, I_bd_up):
         rng = numpy.random.default_rng()
-        currValList = rng.random((numOfUnit,))
-        for i in currValList:
-            self.AddOneUnit(I_bd_lo + (I_bd_up - I_bd_lo) * i, I_floor)
+        currValList = rng.random((numOfUnit))
+        for idx, i in enumerate( currValList):
+            self.AddOneUnit(I_bd_lo + (I_bd_up - I_bd_lo) * i, I_floor, idx)
 
     ### Function: compose the actual waveform based on parameters
     def CompositeWaveform(self):
         for wfp in self.waveform_params_list:
-            wfp = wfp.split()
+            wfp = wfp.split() ### split by space
             time_wf_ns = 0.
+
+            self.ClkGatingClear()
+
             if wfp[0] != 'D':
                 time_wf_ns = float( wfp[1])
             numOfUnit =  int(time_wf_ns/ self.T_clk_in_ns)
@@ -232,7 +267,13 @@ class CurrWaveform:
                 else:
                     I_curr = float( wfp[2])
                     I_floor = float( wfp[3])
+
+                    if len(wfp) == 6: ## clk gated 
+                        self.ReadClkGatingInfo(int( wfp[4]), int( wfp[5]), 'A')
+
                     self.AddConstCLK(numOfUnit, I_curr, I_floor)
+                self.ClkGatingClear()
+
             elif wfp[0] == 'B':
                 if len(wfp) < 5:
                     print("#ERROR: waveform type B parameters insufficient: " + wfp)
@@ -241,17 +282,13 @@ class CurrWaveform:
                     I_start = float( wfp[2])
                     I_end = float( wfp[3])
                     I_floor = float( wfp[4])          
-                    self.AddLinearSlopeCurr(numOfUnit, I_start, I_end, I_floor)
-            elif wfp[0] == 'C':
-                if len(wfp) < 6:
-                    print("#ERROR: waveform type C parameters insufficient: " + wfp)
-                    sys.exit(1)               
-                else:
-                    I_curr = float( wfp[2])
-                    I_floor = float( wfp[3])
-                    numOfConsecutiveClk = int( wfp[4])
-                    numOfSkippedClk = int( wfp[5])
-                    self.AddClkGatingCurr(numOfUnit, I_curr, I_floor, numOfConsecutiveClk, numOfSkippedClk)
+
+                    if len(wfp) == 7:
+                        self.ReadClkGatingInfo(int( wfp[5]), int( wfp[6]), 'B')
+
+                    self.AddLinearSlopeCurr(numOfUnit, I_start, I_end, I_floor)               
+                self.ClkGatingClear()
+
             elif wfp[0] == 'D': 
                 if len(wfp) < 5:
                     print("#ERROR: waveform type D parameters insufficient: " + wfp)
@@ -261,7 +298,13 @@ class CurrWaveform:
                     self.src_profile_envelope_time_unit_in_sec = float(wfp[2]) 
                     self.src_profile_envelope_waveform_unit = float(wfp[3])
                     I_floor = float(wfp[4])
+
+                    if len(wfp) == 7:
+                        self.ReadClkGatingInfo(int( wfp[5]), int( wfp[6]), 'D')
+
                     self.AddScalingCurr()
+                self.ClkGatingClear()
+
             elif wfp[0] == 'E':
                 if len(wfp) < 5:
                     print('#ERROR: waveform type E parameters insufficient: ' + wfp)
@@ -274,7 +317,13 @@ class CurrWaveform:
                         tmp = I_bd_lo
                         I_bd_lo = I_bd_up
                         I_bd_up = tmp 
+
+                    if len(wfp) == 7:
+                        self.ReadClkGatingInfo(int( wfp[5]), int( wfp[6]), 'E')
+
                     self.AddRandWithinRange(numOfUnit, I_floor, I_bd_lo, I_bd_up)
+                self.ClkGatingClear()
+
             elif wfp[0] == 'F':
                 if len(wfp) < 4:
                     print("#ERROR: waveform type F parameters insufficient: " + wfp)
@@ -282,7 +331,12 @@ class CurrWaveform:
                 else:
                     I_start = float( wfp[2])
                     I_end = float( wfp[3])        
+
+                    if len(wfp) == 6:
+                        self.ReadClkGatingInfo(int( wfp[4]), int( wfp[5]), 'F')
+
                     self.AddLinearSlopeCurr_noClk(numOfUnit, I_start, I_end)
+                self.ClkGatingClear()
 
 
     def WriteWaveform(self, fileName):

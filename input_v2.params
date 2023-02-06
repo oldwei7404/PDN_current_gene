@@ -17,20 +17,21 @@ CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
 CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
 
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
-F   500   8   8
-B   100  8.  100.    8.
-B   150  100.  55.    8.
-E   1000 40. 70.    8.
-B   100  55.  8.    8.
+F   10   0  0
+B   100  0.  100.    0.
+B   100  100.  55.    0. 
+E   1000 40. 70.    0. 
+B   100  55.  0.    0.
 
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 ##F   500 0   24.
+
 #B   100  24.  100.    24.
 #B   150  100.  50.    24.
 #E   1000 40. 70.    24.
 #B   100  55.  24.    24.
 
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
-#F 100   0   0
-#F 100   0   100
-#F 2000  100 100
+#F 10   6   6
+#F 1000   6   106
+#F 2000  106 106

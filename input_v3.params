@@ -12,9 +12,9 @@
 
 VDD_in_Volt  0.75
 CLK_Freq_in_GHz    2.0
-CLK_DutyCycle 0.5
-CLK_T_RISE_as_ratio_of_CLK_Freq 0.07
-CLK_T_FALL_as_ratio_of_CLK_Freq 0.07
+CLK_DutyCycle 0.9
+CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
+CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
 
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 
