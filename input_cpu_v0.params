@@ -1,7 +1,7 @@
 #INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
 #INFO: waveform_type B linear_slope:    Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
 #INFO: waveform_type C clock_gating:    Time_Length_in_ns | current_amplitude | current_floor | Num_of_consecutive_clks | Num_of_skipped_clks
-#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor
+#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor
 #INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor 
 #INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end
 #INFO: CLK_Freq unit: GHz
@@ -10,6 +10,7 @@
 #INFO: 0. < CLK_T_FALL_as_ratio_of_CLK_Freq < 1.
 #INFO: 0. < (CLK_T_RISE_as_ratio_of_CLK_Freq + CLK_T_FALL_as_ratio_of_CLK_Freq) < CLK_DutyCycle
 
+#INFO: need to change VDD_in_Volt to 1.0, if waveform D is current vector, rather than power vector
 VDD_in_Volt  0.75
 CLK_Freq_in_GHz    2.5
 CLK_DutyCycle 0.9
@@ -19,8 +20,16 @@ CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 
 #NOTE: based on 1/12/2023 Reji updated power, peak current & ramp up speed estimated by Jiangong, pending response from Ryan
-F   10   0   0
-B   100  0.   16    0.
-B   50  16  13    0.
-E   1000 6.  13   0.
-B   100  10  3.   0.
+#F   10   0   0
+#B   18  0.   12    0.
+#E   2000 10.  14   0.
+
+
+#F   10   0   0
+#F   18   0   12
+#F   1000 12  12
+
+### comment: need to change VDD_in_Volt to 1.0, if vector 
+#F   10   0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\cpu_1.6G_vector.txt  1.e-9   1.     0.  0.64     0.004
+#E   1000    16. 20. 0.

@@ -2,7 +2,7 @@
 # It can support following type of waveforms.
 #INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
 #INFO: waveform_type B linear_slope:    Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
-#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor
+#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor
 #INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor 
 #INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end
 
@@ -15,6 +15,7 @@
 #INFO: 0. < (CLK_T_RISE_as_ratio_of_CLK_Freq + CLK_T_FALL_as_ratio_of_CLK_Freq) < CLK_DutyCycle
 
 ### START example input.params
+##INFO: need to change VDD_in_Volt to 1.0, if waveform D is current vector, rather than power vector
 # VDD_in_Volt  0.75
 # CLK_Freq_in_GHz    3.0
 # CLK_DutyCycle 0.9
@@ -26,12 +27,11 @@
 # B   10  5.  100.    0.
 # B   10  100. 55.    0.
 # A   15 55. 0.
-# C   20 60. 5.  2   3
 # D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.0  4.
 # A   10   55.0  0.
 
 ##INFO: examples to activate clk gating (ccontinue 3 clks, skip 2 clks, repeat)
-# B   10  5.  100.    0.    4   1
+# B   10  0.  100.    0.    4   1
 # B   10  100. 55.    0.    3   2
 ### END example input.params
 
@@ -69,6 +69,9 @@ class CurrWaveform:
     nominal_I = 1.0
     I_lkg = 1.0
     voltage = 0.0
+    ### only applied to waveform D
+    waveform_d_time_scale_fac = 1.0 
+    waveform_d_mag_scale_fac = 1.0 
 
     ### these 3 paras are per waveform, will be overwritten by next waveform
     is_clk_gating = False
@@ -113,6 +116,9 @@ class CurrWaveform:
                     
                 elif cln_str[0] == 'VDD_in_Volt':
                     self.voltage = float(cln_str[1])
+                    if abs(self.voltage) < 1.e-6:
+                        print('\n#ERRORR: Vdd rail voltage needs to be larger than 0, input value is ' + str(self.voltage) + '\n\n')
+                        exit(-1)
                     print('#INFO: Vdd rail voltage (V):\t' + str(self.voltage))
 
                 else:  # read in waveform params
@@ -212,7 +218,7 @@ class CurrWaveform:
             time_st_fnd = False
             while cln_str:
                 cln_str_src = cln_str.lstrip(' ').rstrip('\n')
-                if cln_str_src == '' or cln_str_src[0] == '#':
+                if cln_str_src == '' or cln_str_src[0] == '#': ### skip empty line or lines start with #
                     cln_str = fin.readline()
                     continue    
 
@@ -222,10 +228,10 @@ class CurrWaveform:
                     time_ST = time_ns
                     time_st_fnd = True
 
-                src_profile_time_in_ns.append(time_ns - time_ST)    ### nominal profile starts from 0
+                src_profile_time_in_ns.append( self.waveform_d_time_scale_fac * ( time_ns - time_ST))    ### nominal profile starts from 0
                 ### Note: divided by voltage to obtian current
                 curr_ = float(cln_str[1]) * self.src_profile_envelope_waveform_unit/ self.voltage
-                src_profile_amplitude.append( curr_ )     
+                src_profile_amplitude.append( curr_ * self.waveform_d_mag_scale_fac )     
                 cln_str = fin.readline()
         fin.close()
         #### interpolate 
@@ -290,7 +296,7 @@ class CurrWaveform:
                 self.ClkGatingClear()
 
             elif wfp[0] == 'D': 
-                if len(wfp) < 5:
+                if len(wfp) < 7:
                     print("#ERROR: waveform type D parameters insufficient: " + wfp)
                     sys.exit(1)
                 else:
@@ -298,11 +304,14 @@ class CurrWaveform:
                     self.src_profile_envelope_time_unit_in_sec = float(wfp[2]) 
                     self.src_profile_envelope_waveform_unit = float(wfp[3])
                     I_floor = float(wfp[4])
+                    self.waveform_d_time_scale_fac = float(wfp[5])
+                    self.waveform_d_mag_scale_fac  = float(wfp[6])
+                    print('#INFO: Waveform D magnitdue is scaled by 1/voltage = '+ str(1/self.voltage)+'\n')
 
-                    if len(wfp) == 7:
-                        self.ReadClkGatingInfo(int( wfp[5]), int( wfp[6]), 'D')
+                    if len(wfp) == 9:
+                        self.ReadClkGatingInfo(int( wfp[7]), int( wfp[8]), 'D')
 
-                    self.AddScalingCurr()
+                    self.AddScalingCurr(I_floor)
                 self.ClkGatingClear()
 
             elif wfp[0] == 'E':
@@ -418,7 +427,7 @@ else:
     sys.exit(1)
 
 # END read input parameters
-print('\n#INFO: Start to run waveform generation at '+ str(voltage) + ' V\n')
+print('\n#INFO: Start to run waveform generation !')
 
 waveformInst = CurrWaveform(file_in_para)
 waveformInst.CompositeWaveform()
