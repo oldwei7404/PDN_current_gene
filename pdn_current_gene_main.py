@@ -69,6 +69,7 @@ class CurrWaveform:
     nominal_I = 1.0
     I_lkg = 1.0
     voltage = 0.0
+    curr_mag_scale_fac_charge_consv = 1.0
     ### only applied to waveform D
     waveform_d_time_scale_fac = 1.0 
     waveform_d_mag_scale_fac = 1.0 
@@ -127,11 +128,14 @@ class CurrWaveform:
                     print('#INFO: Reading waveform def. ' + str(wf_cnt) + ': ' + self.waveform_params_list[-1])
                 
                 cln_str = fin.readline()
-                ### sanity check
-                if (self.t_rise_ratio_T + self.t_fall_ratio_T) > self.clk_duty_cycle:
-                    print ('#ERROR: summation of clk rise time and fall time ratio cannot exceed duty cycle ratio\n')
-                    sys.exit(1)
         fin.close()
+        
+        ### sanity check
+        if (self.t_rise_ratio_T + self.t_fall_ratio_T) > self.clk_duty_cycle:
+            print ('#ERROR: summation of clk rise time and fall time ratio cannot exceed duty cycle ratio\n')
+            sys.exit(1)
+        self.curr_mag_scale_fac_charge_consv =  1./ (self.clk_duty_cycle - 0.5 * self.t_rise_ratio_T - 0.5 * self.t_fall_ratio_T)
+        print('\n#INFO: ALL waveforms with clks with be scaled by ' + str(self.curr_mag_scale_fac_charge_consv) + '\n')
 
     def ClkGatingClear(self):
         self.is_clk_gating = False
@@ -184,16 +188,17 @@ class CurrWaveform:
     ### Function: Append time length of nominal clk current
     def AddConstCLK(self, NumOfUnit, I_amp, I_floor):
         for i in range (0, NumOfUnit):
-            self.AddOneUnit(I_amp, I_floor, i)
+            self.AddOneUnit(I_amp * self.curr_mag_scale_fac_charge_consv, I_floor, i)
 
     ### Function: Append linear ramp up curent from I_start to I_end witihn t_ramp time
     def AddLinearSlopeCurr(self, numOfUnit, I_start, I_end, I_floor):
         I_step = (I_end - I_start)/numOfUnit
         for i in range(0, numOfUnit):
             I_tmp = I_start + (i+1) * I_step
-            self.AddOneUnit(I_tmp, I_floor, i)
+            self.AddOneUnit(I_tmp * self.curr_mag_scale_fac_charge_consv, I_floor, i)
     
     def AddLinearSlopeCurr_noClk(self, numOfUnit, I_start, I_end):
+        ### Note: no clk is involved, hence no current scaling 
         I_step = (I_end - I_start)/numOfUnit
         for i in range(0, numOfUnit):
             I_tmp = I_start + (i+1) * I_step
@@ -243,16 +248,16 @@ class CurrWaveform:
             time_ = i * self.T_clk_in_ns
             amp_ = func_intep(time_)
             #### current amplitude scaled such that charge is const
-            amp_ = amp_ / (self.clk_duty_cycle - 0.5 * self.t_rise_ratio_T - 0.5 * self.t_fall_ratio_T)
-
-            self.AddOneUnit(amp_, I_floor, i)      
+            self.AddOneUnit(amp_ * self.curr_mag_scale_fac_charge_consv, I_floor, i)      
 
     ### Function: Add random current within given upper and lower bound
     def AddRandWithinRange(self, numOfUnit, I_floor, I_bd_lo, I_bd_up):
         rng = numpy.random.default_rng()
         currValList = rng.random((numOfUnit))
         for idx, i in enumerate( currValList):
-            self.AddOneUnit(I_bd_lo + (I_bd_up - I_bd_lo) * i, I_floor, idx)
+            curr = I_bd_lo + (I_bd_up - I_bd_lo) * i
+            curr = curr * self.curr_mag_scale_fac_charge_consv
+            self.AddOneUnit(curr, I_floor, idx)
 
     ### Function: compose the actual waveform based on parameters
     def CompositeWaveform(self):
