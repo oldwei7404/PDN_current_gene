@@ -1,6 +1,5 @@
 #INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
 #INFO: waveform_type B linear_slope:    Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
-#INFO: waveform_type C clock_gating:    Time_Length_in_ns | current_amplitude | current_floor | Num_of_consecutive_clks | Num_of_skipped_clks
 #INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor
 #INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor 
 #INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end
@@ -20,16 +19,21 @@ CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 
 #NOTE: based on 1/12/2023 Reji updated power, peak current & ramp up speed estimated by Jiangong, pending response from Ryan
-F   10   0   0
-B   18  0.   12    0.
-E   1000 10.  13   0.
-
-
 #F   10   0   0
-#F   18   0   12
-#F   1000 12  12
+#B   18  0.   12    0.
+#E   1000   10.  13   0.
+
+F   10   0   0
+F   216   0   12
+F   2000 12  12
 
 ### comment: need to change VDD_in_Volt to 1.0, if vector 
 #F   10   0   0
 #D   C:\Users\jiangongwei\Documents\Python_data\cpu_1.6G_vector.txt  1.e-9   1.     0.  0.64     0.004
 #E   1000    10. 13. 0.
+
+#F   10  0   0
+#B   144  0   12  0
+#A   2000 12  0
+
+

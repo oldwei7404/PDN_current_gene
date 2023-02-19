@@ -1,7 +1,7 @@
 # This script is intended for PDN current profile generation, manipulation 
 # It can support following type of waveforms.
 #INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
-#INFO: waveform_type B linear_slope:    Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
+#INFO: waveform_type B linear_slope_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
 #INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor
 #INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor 
 #INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end
@@ -129,7 +129,7 @@ class CurrWaveform:
                 
                 cln_str = fin.readline()
         fin.close()
-        
+
         ### sanity check
         if (self.t_rise_ratio_T + self.t_fall_ratio_T) > self.clk_duty_cycle:
             print ('#ERROR: summation of clk rise time and fall time ratio cannot exceed duty cycle ratio\n')
@@ -262,6 +262,7 @@ class CurrWaveform:
     ### Function: compose the actual waveform based on parameters
     def CompositeWaveform(self):
         for wfp in self.waveform_params_list:
+            wfp_orig = wfp
             wfp = wfp.split() ### split by space
             time_wf_ns = 0.
 
@@ -273,7 +274,7 @@ class CurrWaveform:
         
             if wfp[0] == 'A':
                 if len(wfp) < 4:
-                    print("#ERROR: waveform type A parameters insufficient: " + wfp)
+                    print("#ERROR: waveform type A parameters insufficient: " + wfp_orig)
                     sys.exit(1)
                 else:
                     I_curr = float( wfp[2])
@@ -287,7 +288,7 @@ class CurrWaveform:
 
             elif wfp[0] == 'B':
                 if len(wfp) < 5:
-                    print("#ERROR: waveform type B parameters insufficient: " + wfp)
+                    print("#ERROR: waveform type B parameters insufficient: " + wfp_orig)
                     sys.exit(1)
                 else:
                     I_start = float( wfp[2])
@@ -302,7 +303,7 @@ class CurrWaveform:
 
             elif wfp[0] == 'D': 
                 if len(wfp) < 7:
-                    print("#ERROR: waveform type D parameters insufficient: " + wfp)
+                    print("#ERROR: waveform type D parameters insufficient: " + wfp_orig)
                     sys.exit(1)
                 else:
                     self.src_profile_envelope_fileName = wfp[1]
@@ -321,7 +322,7 @@ class CurrWaveform:
 
             elif wfp[0] == 'E':
                 if len(wfp) < 5:
-                    print('#ERROR: waveform type E parameters insufficient: ' + wfp)
+                    print('#ERROR: waveform type E parameters insufficient: ' + wfp_orig)
                     sys.exit(1)
                 else:
                     I_floor = float(wfp[4])
@@ -340,7 +341,7 @@ class CurrWaveform:
 
             elif wfp[0] == 'F':
                 if len(wfp) < 4:
-                    print("#ERROR: waveform type F parameters insufficient: " + wfp)
+                    print("#ERROR: waveform type F parameters insufficient: " + wfp_orig)
                     sys.exit(1)
                 else:
                     I_start = float( wfp[2])
