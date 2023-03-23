@@ -20,6 +20,6 @@ A   10  5.  0.
 B   10  5.  100.    0.
 B   10  100. 55.    0.
 A   15 55. 0.
-C   20 60. 0  2   3
-D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.     0.  3.
+#D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.     0.  3. 0
+C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test1.pkl  1.e-9   1.     0.  1.0     0.25    Cycles   pNNE 2
 A   10   55.0  0.

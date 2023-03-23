@@ -2,9 +2,11 @@
 # It can support following type of waveforms.
 #INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
 #INFO: waveform_type B linear_slope_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
-#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor
+#INFO: waveform_type C scaled profile in .pkl:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | col_clk | col_data | skip_first_n_data < clk conti| clk skip>
+#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | skip_first_n_data < clk conti| clk skip>
 #INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor 
 #INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end
+
 
 #INFO: append Num of consecutive clocks and skipped clock number after waveform_type to activate clk gating, hence waveform_type C is retired
 
@@ -27,8 +29,11 @@
 # B   10  5.  100.    0.
 # B   10  100. 55.    0.
 # A   15 55. 0.
-# D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.0  4.
+# C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test1.pkl  1.e-9   1.     0.  1.0     0.25    Cycles   pNNE 0
+# D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.0  0.  1.  1.  0 
 # A   10   55.0  0.
+### NOTE: waveform C support .pkl to pick column titled "Cycles" and "pNNE", use 0.25 mag scaling
+
 
 ##INFO: examples to activate clk gating (ccontinue 3 clks, skip 2 clks, repeat)
 # B   10  0.  100.    0.    4   1
@@ -41,6 +46,7 @@ import os, sys, getopt
 import matplotlib.pyplot as plt
 import scipy.interpolate
 import numpy.random
+import pandas as pd
 
 file_dir = ""
 file_in_para = ""
@@ -70,9 +76,16 @@ class CurrWaveform:
     I_lkg = 1.0
     voltage = 0.0
     curr_mag_scale_fac_charge_consv = 1.0
+    ### only applied to waveform C
+    waveform_c_col_clk = ''
+    waveform_c_col_data = ''
+    waveform_c_time_scale_fac = 1.0 
+    waveform_c_mag_scale_fac = 1.0 
+    waveform_c_skip_n_data = 0
     ### only applied to waveform D
     waveform_d_time_scale_fac = 1.0 
     waveform_d_mag_scale_fac = 1.0 
+    waveform_d_skip_n_data = 0
 
     ### these 3 paras are per waveform, will be overwritten by next waveform
     is_clk_gating = False
@@ -142,6 +155,14 @@ class CurrWaveform:
         self.numOfConsecutiveClk = 0
         self.numOfSkippedClk = 0
 
+    def ClearWaveformInfo(self):
+        self.src_profile_envelope_fileName = ''
+        self.src_profile_envelope_time_unit_in_sec = 1.
+        self.src_profile_envelope_waveform_unit = 1.
+        I_floor = 0.
+        self.waveform_d_time_scale_fac = 1.
+        self.waveform_d_mag_scale_fac = 1.
+
     def ReadClkGatingInfo(self, numOfConsecutiveClk_, numOfSkippedClk_, waveFormName):
         self.is_clk_gating = True 
         self.numOfConsecutiveClk = numOfConsecutiveClk_
@@ -208,11 +229,44 @@ class CurrWaveform:
             self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns)
             self.currWaveform_list_curr_Amp.append(I_tmp + I_step)           
 
-    def AddScalingCurr(self, I_floor):
+    def AddScalingCurr_waveformC(self, I_floor):
         ### read in source file
         if not os.path.exists(self.src_profile_envelope_fileName):
             print('#ERROR: Source profile envelope file <' + self.src_profile_envelope_fileName + '> does not exist !')
             sys.exit(1)
+
+        print('#INFO: Waveform C magnitdue is scaled by 1/voltage = '+ str(1/self.voltage))
+        if self.waveform_c_skip_n_data != 0:
+            print('#INFO: skipping first ' + str(self.waveform_c_skip_n_data) + ' data samplings')
+
+        df = pd.read_pickle(self.src_profile_envelope_fileName)
+        src_profile_time_in_ns = df[self.waveform_c_col_clk] 
+        src_profile_time_in_ns = src_profile_time_in_ns[self.waveform_c_skip_n_data : -1]
+        src_profile_time_in_ns = src_profile_time_in_ns * self.src_profile_envelope_time_unit_in_sec * 1.e9 * self.T_clk_in_ns * self.waveform_c_time_scale_fac
+        src_profile_amplitude = df[self.waveform_c_col_data] 
+        src_profile_amplitude = src_profile_amplitude[self.waveform_c_skip_n_data : -1]
+        src_profile_amplitude = src_profile_amplitude * self.src_profile_envelope_waveform_unit/ self.voltage * self.waveform_c_mag_scale_fac
+        print('#INFO: waveform C columns: \n')
+        print(df.columns)
+        #tmp_col = df.columns
+        #tmp_row0= df.iloc[0,:]
+        src_profile_time_in_ns = src_profile_time_in_ns.values.tolist()
+        src_profile_amplitude  = src_profile_amplitude.values.tolist()
+
+        numOfUnit = int( (src_profile_time_in_ns[-1] - src_profile_time_in_ns[0]) / self.T_clk_in_ns )
+        for i in range (0, numOfUnit):
+            self.AddOneUnit( src_profile_amplitude[i] * self.curr_mag_scale_fac_charge_consv, I_floor, i) 
+
+
+    def AddScalingCurr_waveformD(self, I_floor):
+        ### read in source file
+        if not os.path.exists(self.src_profile_envelope_fileName):
+            print('#ERROR: Source profile envelope file <' + self.src_profile_envelope_fileName + '> does not exist !')
+            sys.exit(1)
+
+        print('#INFO: Waveform D magnitdue is scaled by 1/voltage = '+ str(1/self.voltage)+'\n')
+        if self.waveform_d_skip_n_data != 0:
+            print('#INFO: skipping first ' + str(self.waveform_d_skip_n_data) + ' data samplings')
 
         src_profile_time_in_ns = []
         src_profile_amplitude  = []
@@ -221,6 +275,7 @@ class CurrWaveform:
             cln_str = fin.readline()
             time_ST = 0
             time_st_fnd = False
+            data_cnt = 0
             while cln_str:
                 cln_str_src = cln_str.lstrip(' ').rstrip('\n')
                 if cln_str_src == '' or cln_str_src[0] == '#': ### skip empty line or lines start with #
@@ -229,15 +284,20 @@ class CurrWaveform:
 
                 cln_str = cln_str_src.split()   
                 time_ns = float(cln_str[0]) * self.src_profile_envelope_time_unit_in_sec * 1.e9
-                if not time_st_fnd:
-                    time_ST = time_ns
-                    time_st_fnd = True
+                data_cnt = data_cnt + 1
 
-                src_profile_time_in_ns.append( self.waveform_d_time_scale_fac * ( time_ns - time_ST))    ### nominal profile starts from 0
-                ### Note: divided by voltage to obtian current
-                curr_ = float(cln_str[1]) * self.src_profile_envelope_waveform_unit/ self.voltage
-                src_profile_amplitude.append( curr_ * self.waveform_d_mag_scale_fac )     
-                cln_str = fin.readline()
+                if data_cnt >= self.waveform_d_skip_n_data: 
+                    if not time_st_fnd:
+                        time_ST = time_ns
+                        time_st_fnd = True
+
+                    src_profile_time_in_ns.append( self.waveform_d_time_scale_fac * ( time_ns - time_ST))    ### nominal profile starts from 0
+                    ### Note: divided by voltage to obtian current
+                    curr_ = float(cln_str[1]) * self.src_profile_envelope_waveform_unit/ self.voltage
+                    src_profile_amplitude.append( curr_ * self.waveform_d_mag_scale_fac )     
+
+                cln_str = fin.readline()                
+
         fin.close()
         #### interpolate 
         time_len = src_profile_time_in_ns[-1] - src_profile_time_in_ns[0]
@@ -268,7 +328,7 @@ class CurrWaveform:
 
             self.ClkGatingClear()
 
-            if wfp[0] != 'D':
+            if wfp[0] != 'D' and wfp[0] != 'C' :
                 time_wf_ns = float( wfp[1])
             numOfUnit =  int(time_wf_ns/ self.T_clk_in_ns)
         
@@ -301,8 +361,31 @@ class CurrWaveform:
                     self.AddLinearSlopeCurr(numOfUnit, I_start, I_end, I_floor)               
                 self.ClkGatingClear()
 
+            elif wfp[0] == 'C': 
+                if len(wfp) < 10:
+                    print("#ERROR: waveform type C parameters insufficient: " + wfp_orig)
+                    sys.exit(1)
+                else:
+                    self.src_profile_envelope_fileName = wfp[1]
+                    self.src_profile_envelope_time_unit_in_sec = float(wfp[2]) 
+                    self.src_profile_envelope_waveform_unit = float(wfp[3])
+                    I_floor = float(wfp[4])
+                    self.waveform_c_time_scale_fac = float(wfp[5])
+                    self.waveform_c_mag_scale_fac  = float(wfp[6])
+                    ### column names in pkl
+                    self.waveform_c_col_clk = wfp[7]
+                    self.waveform_c_col_data = wfp[8]
+                    self.waveform_c_skip_n_data = int(wfp[9])
+
+                    if len(wfp) == 12:
+                        self.ReadClkGatingInfo(int( wfp[10]), int( wfp[11]), 'D')
+
+                    self.AddScalingCurr_waveformC(I_floor)
+                self.ClkGatingClear()
+                self.ClearWaveformInfo()
+                
             elif wfp[0] == 'D': 
-                if len(wfp) < 7:
+                if len(wfp) < 8:
                     print("#ERROR: waveform type D parameters insufficient: " + wfp_orig)
                     sys.exit(1)
                 else:
@@ -312,13 +395,14 @@ class CurrWaveform:
                     I_floor = float(wfp[4])
                     self.waveform_d_time_scale_fac = float(wfp[5])
                     self.waveform_d_mag_scale_fac  = float(wfp[6])
-                    print('#INFO: Waveform D magnitdue is scaled by 1/voltage = '+ str(1/self.voltage)+'\n')
+                    self.waveform_d_skip_n_data = int(wfp[7])
 
-                    if len(wfp) == 9:
-                        self.ReadClkGatingInfo(int( wfp[7]), int( wfp[8]), 'D')
+                    if len(wfp) == 10:
+                        self.ReadClkGatingInfo(int( wfp[8]), int( wfp[9]), 'D')
 
-                    self.AddScalingCurr(I_floor)
+                    self.AddScalingCurr_waveformD(I_floor)
                 self.ClkGatingClear()
+                self.ClearWaveformInfo()
 
             elif wfp[0] == 'E':
                 if len(wfp) < 5:
@@ -352,6 +436,8 @@ class CurrWaveform:
 
                     self.AddLinearSlopeCurr_noClk(numOfUnit, I_start, I_end)
                 self.ClkGatingClear()
+
+
 
 
     def WriteWaveform(self, fileName):
@@ -431,6 +517,7 @@ if os.path.exists(file_in_para):
 else:
     print('#ERROR: intput parameter file <' + file_in_para + '> does not exist !')
     sys.exit(1)
+
 
 # END read input parameters
 print('\n#INFO: Start to run waveform generation !')
