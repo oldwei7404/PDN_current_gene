@@ -241,7 +241,7 @@ class CurrWaveform:
 
         df = pd.read_pickle(self.src_profile_envelope_fileName)
         src_profile_time_in_ns = df[self.waveform_c_col_clk] 
-        src_profile_time_in_ns = src_profile_time_in_ns[self.waveform_c_skip_n_data : -1]
+        src_profile_time_in_ns = src_profile_time_in_ns[self.waveform_c_skip_n_data : -1] - src_profile_time_in_ns[self.waveform_c_skip_n_data]  ## time starts a 0
         src_profile_time_in_ns = src_profile_time_in_ns * self.src_profile_envelope_time_unit_in_sec * 1.e9 * self.T_clk_in_ns * self.waveform_c_time_scale_fac
         src_profile_amplitude = df[self.waveform_c_col_data] 
         src_profile_amplitude = src_profile_amplitude[self.waveform_c_skip_n_data : -1]
@@ -252,11 +252,26 @@ class CurrWaveform:
         #tmp_row0= df.iloc[0,:]
         src_profile_time_in_ns = src_profile_time_in_ns.values.tolist()
         src_profile_amplitude  = src_profile_amplitude.values.tolist()
+        func_intep = scipy.interpolate.interp1d(src_profile_time_in_ns, src_profile_amplitude)
 
+        curr_delta_min = 1.e8
+        curr_delta_max = -1.e-8
+        amp_last = 0; 
         numOfUnit = int( (src_profile_time_in_ns[-1] - src_profile_time_in_ns[0]) / self.T_clk_in_ns )
         for i in range (0, numOfUnit):
-            self.AddOneUnit( src_profile_amplitude[i] * self.curr_mag_scale_fac_charge_consv, I_floor, i) 
+            time_ = i * self.T_clk_in_ns
+            amp_ = func_intep(time_)
+            #### current amplitude scaled such that charge is const
+            self.AddOneUnit(amp_ * self.curr_mag_scale_fac_charge_consv, I_floor, i)  
+            #self.AddOneUnit( src_profile_amplitude[i] * self.curr_mag_scale_fac_charge_consv, I_floor, i) 
+            curr_delta = amp_ - amp_last
+            if curr_delta > curr_delta_max:
+                curr_delta_max = curr_delta
+            if curr_delta < curr_delta_min:
+                curr_delta_min = curr_delta
+            amp_last = amp_ 
 
+        print('#INFO: max delta current per cycle (before charge scale): '+str(curr_delta_max) + ', \t min delta current per cycle(before charge scale): ' + str(curr_delta_min) )
 
     def AddScalingCurr_waveformD(self, I_floor):
         ### read in source file
@@ -304,11 +319,24 @@ class CurrWaveform:
         numOfUnit = int( time_len / self.T_clk_in_ns)
         func_intep = scipy.interpolate.interp1d(src_profile_time_in_ns, src_profile_amplitude)
 
+        curr_delta_min = 1.e8
+        curr_delta_max = -1.e-8
+        amp_last = 0; 
+
         for i in range (0, numOfUnit):
             time_ = i * self.T_clk_in_ns
             amp_ = func_intep(time_)
             #### current amplitude scaled such that charge is const
             self.AddOneUnit(amp_ * self.curr_mag_scale_fac_charge_consv, I_floor, i)      
+
+            curr_delta = amp_ - amp_last
+            if curr_delta > curr_delta_max:
+                curr_delta_max = curr_delta
+            if curr_delta < curr_delta_min:
+                curr_delta_min = curr_delta
+            amp_last = amp_ 
+
+        print('#INFO: scaled max delta current per cycle: '+str(curr_delta_max) + ', \t scaled min delta current per cycle: ' + str(curr_delta_min) )
 
     ### Function: Add random current within given upper and lower bound
     def AddRandWithinRange(self, numOfUnit, I_floor, I_bd_lo, I_bd_up):
