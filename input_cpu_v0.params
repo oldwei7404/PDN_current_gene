@@ -28,12 +28,19 @@ CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
 #F   2000 11.6  11.6
 #F   50   11.6  0
 
-B   10   0   0  0
-B   72   0   12  0
-E  2000 8 12  0
-#A  200  6 0
-B   200   10  0  0
+#B   10   0   0  0
+#B   72   0   12  0
+#E  2000 8 12  0
+##A  200  6 0
+#B   200   10  0  0
 
+# NOTE: 14 core CPU
+B   10   0   0  0
+B   250   0   12  0
+#E   2000 7 12  0
+A  500  12 0
+B  250   12  0  0
+B 100  0   0  0
 
 ### comment: need to change VDD_in_Volt to 1.0, if vector 
 #F   10   0   0

@@ -1,11 +1,11 @@
 # This script is intended for PDN current profile generation, manipulation 
 # It can support following type of waveforms.
-#INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
-#INFO: waveform_type B linear_slope_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
-#INFO: waveform_type C scaled profile in .pkl:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | col_clk | col_data | skip_first_n_data < clk conti| clk skip>
-#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | skip_first_n_data < clk conti| clk skip>
-#INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor 
-#INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end
+#INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type B linear_slope_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type C scaled profile in .pkl:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | col_clk | col_data | skip_first_n_data < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | skip_first_n_data  < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor  < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end < | clk conti| clk skip | this_freq_in_GHz >
 
 
 #INFO: append Num of consecutive clocks and skipped clock number after waveform_type to activate clk gating, hence waveform_type C is retired
@@ -66,9 +66,12 @@ class CurrWaveform:
     src_profile_envelope_time_unit_in_sec = 1.
     src_profile_envelope_waveform_unit = 1.
 
+    clk_freq_norm = 0
+
     clk_freq = 0
     T_clk = 0
     T_clk_in_ns = 0
+
     clk_duty_cycle = 0.5
     t_rise_ratio_T = 0.1
     t_fall_ratio_T = 0.1
@@ -111,6 +114,7 @@ class CurrWaveform:
                 cln_str = cln_str_src.split()
                 if cln_str[0] == 'CLK_Freq_in_GHz':
                     self.clk_freq = float( cln_str[1]) * 1.e9 
+                    self.clk_freq_norm = self.clk_freq
                     self.T_clk = 1. / self.clk_freq
                     self.T_clk_in_ns = self.T_clk * 1.e9
                     print('#INFO: CLK freq (GHz):\t' + str(self.clk_freq / 1.e9))
@@ -168,6 +172,17 @@ class CurrWaveform:
         self.numOfConsecutiveClk = numOfConsecutiveClk_
         self.numOfSkippedClk = numOfSkippedClk_
         print("#INFO: waveform type "+ waveFormName+" clk gating enabled, consecutive/skipped clk = " + str(self.numOfConsecutiveClk) + ' / ' + str(self.numOfSkippedClk))
+
+    def UpdateFreq(self, freq_in_GHz):
+        self.clk_freq = freq_in_GHz * 1.e9
+        self.T_clk = 1./self.clk_freq
+        self.T_clk_in_ns = self.T_clk * 1.e9
+
+    def RestoreFreq(self):
+        self.clk_freq = self.clk_freq_norm
+        self.T_clk = 1./self.clk_freq
+        self.T_clk_in_ns = self.T_clk * 1.e9      
+
 
     ### Function: Add one unit
     ### Optional clk gating: parameters after "I_floor" is optional to enable clk gating
@@ -271,7 +286,7 @@ class CurrWaveform:
                 curr_delta_min = curr_delta
             amp_last = amp_ 
 
-        print('#INFO: max delta current per cycle (before charge scale): '+str(curr_delta_max) + ', \t min delta current per cycle(before charge scale): ' + str(curr_delta_min) )
+        print('#INFO: scaled worst pos. delta current per cycle(before charge scaling): '+str(curr_delta_max) + ', scaled worst neg. delta current per cycle(before charge scaling): ' + str(curr_delta_min) )
 
     def AddScalingCurr_waveformD(self, I_floor):
         ### read in source file
@@ -336,7 +351,7 @@ class CurrWaveform:
                 curr_delta_min = curr_delta
             amp_last = amp_ 
 
-        print('#INFO: scaled max delta current per cycle: '+str(curr_delta_max) + ', \t scaled min delta current per cycle: ' + str(curr_delta_min) )
+        print('#INFO: scaled worst pos. delta current per cycle(before charge scaling): '+str(curr_delta_max) + ',scaled worst neg. delta current per cycle(before charge scaling): ' + str(curr_delta_min) )
 
     ### Function: Add random current within given upper and lower bound
     def AddRandWithinRange(self, numOfUnit, I_floor, I_bd_lo, I_bd_up):
@@ -368,11 +383,13 @@ class CurrWaveform:
                     I_curr = float( wfp[2])
                     I_floor = float( wfp[3])
 
-                    if len(wfp) == 6: ## clk gated 
+                    if len(wfp) == 7: ## clk gated 
                         self.ReadClkGatingInfo(int( wfp[4]), int( wfp[5]), 'A')
+                        self.UpdateFreq(float(wfp[6]))
 
                     self.AddConstCLK(numOfUnit, I_curr, I_floor)
                 self.ClkGatingClear()
+                self.RestoreFreq()
 
             elif wfp[0] == 'B':
                 if len(wfp) < 5:
@@ -383,11 +400,13 @@ class CurrWaveform:
                     I_end = float( wfp[3])
                     I_floor = float( wfp[4])          
 
-                    if len(wfp) == 7:
+                    if len(wfp) == 8:
                         self.ReadClkGatingInfo(int( wfp[5]), int( wfp[6]), 'B')
+                        self.UpdateFreq(float(wfp[7]))
 
                     self.AddLinearSlopeCurr(numOfUnit, I_start, I_end, I_floor)               
                 self.ClkGatingClear()
+                self.RestoreFreq()
 
             elif wfp[0] == 'C': 
                 if len(wfp) < 10:
@@ -405,12 +424,14 @@ class CurrWaveform:
                     self.waveform_c_col_data = wfp[8]
                     self.waveform_c_skip_n_data = int(wfp[9])
 
-                    if len(wfp) == 12:
+                    if len(wfp) == 13:
                         self.ReadClkGatingInfo(int( wfp[10]), int( wfp[11]), 'D')
+                        self.UpdateFreq(float(wfp[12]))
 
                     self.AddScalingCurr_waveformC(I_floor)
                 self.ClkGatingClear()
                 self.ClearWaveformInfo()
+                self.RestoreFreq()
                 
             elif wfp[0] == 'D': 
                 if len(wfp) < 8:
@@ -425,12 +446,14 @@ class CurrWaveform:
                     self.waveform_d_mag_scale_fac  = float(wfp[6])
                     self.waveform_d_skip_n_data = int(wfp[7])
 
-                    if len(wfp) == 10:
+                    if len(wfp) == 11:
                         self.ReadClkGatingInfo(int( wfp[8]), int( wfp[9]), 'D')
+                        self.UpdateFreq(float(wfp[10]))
 
                     self.AddScalingCurr_waveformD(I_floor)
                 self.ClkGatingClear()
                 self.ClearWaveformInfo()
+                self.RestoreFreq()
 
             elif wfp[0] == 'E':
                 if len(wfp) < 5:
@@ -445,11 +468,13 @@ class CurrWaveform:
                         I_bd_lo = I_bd_up
                         I_bd_up = tmp 
 
-                    if len(wfp) == 7:
+                    if len(wfp) == 8:
                         self.ReadClkGatingInfo(int( wfp[5]), int( wfp[6]), 'E')
+                        self.UpdateFreq(float(wfp[7]))
 
                     self.AddRandWithinRange(numOfUnit, I_floor, I_bd_lo, I_bd_up)
                 self.ClkGatingClear()
+                self.RestoreFreq()
 
             elif wfp[0] == 'F':
                 if len(wfp) < 4:
@@ -459,11 +484,13 @@ class CurrWaveform:
                     I_start = float( wfp[2])
                     I_end = float( wfp[3])        
 
-                    if len(wfp) == 6:
+                    if len(wfp) == 7:
                         self.ReadClkGatingInfo(int( wfp[4]), int( wfp[5]), 'F')
+                        self.UpdateFreq(float(wfp[6]))
 
                     self.AddLinearSlopeCurr_noClk(numOfUnit, I_start, I_end)
                 self.ClkGatingClear()
+                self.RestoreFreq()
 
 
 
