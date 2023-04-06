@@ -2,13 +2,10 @@
 # It can support following type of waveforms.
 #INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor < | clk conti| clk skip | this_freq_in_GHz >
 #INFO: waveform_type B linear_slope_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor < | clk conti| clk skip | this_freq_in_GHz >
-#INFO: waveform_type C scaled profile in .pkl:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | col_clk | col_data | skip_first_n_data < | clk conti| clk skip | this_freq_in_GHz >
-#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | skip_first_n_data  < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type C scaled profile in .pkl:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | col_clk | col_data | skip_first_n_data | with_clk?1|0   | < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | skip_first_n_data  | with_clk?1|0   | < | clk conti| clk skip | this_freq_in_GHz >
 #INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor  < | clk conti| clk skip | this_freq_in_GHz >
 #INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end < | clk conti| clk skip | this_freq_in_GHz >
-
-
-#INFO: append Num of consecutive clocks and skipped clock number after waveform_type to activate clk gating, hence waveform_type C is retired
 
 #INFO: CLK_Freq unit: GHz
 #INFO: 0. < CLK_DutyCycle < 1.
@@ -24,20 +21,21 @@
 # CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
 # CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
 
+## usage 1
 ##INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 # A   10  5.  0.
 # B   10  5.  100.    0.
 # B   10  100. 55.    0.
 # A   15 55. 0.
-# C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test1.pkl  1.e-9   1.     0.  1.0     0.25    Cycles   pNNE 0
-# D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.0  0.  1.  1.  0 
+# C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test1.pkl  1.e-9   1.     0.  1.0     0.25    Cycles   pNNE 0  1
+# D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.0  0.  1.  1.  0  1
 # A   10   55.0  0.
 ### NOTE: waveform C support .pkl to pick column titled "Cycles" and "pNNE", use 0.25 mag scaling
 
-
-##INFO: examples to activate clk gating (ccontinue 3 clks, skip 2 clks, repeat)
-# B   10  0.  100.    0.    4   1
-# B   10  100. 55.    0.    3   2
+## usage 2 (clk gating)
+##INFO: examples to activate clk gating (ccontinue 3 clks, skip 2 clks, while clk freq is 2GHz and 3.5GHz, respectively)
+# B   10  0.  100.    0.    4   1   2.0
+# B   10  100. 55.    0.    3   2   3.5
 ### END example input.params
 
 import os, sys, getopt
@@ -85,10 +83,12 @@ class CurrWaveform:
     waveform_c_time_scale_fac = 1.0 
     waveform_c_mag_scale_fac = 1.0 
     waveform_c_skip_n_data = 0
+    waveform_c_w_clk = True 
     ### only applied to waveform D
     waveform_d_time_scale_fac = 1.0 
     waveform_d_mag_scale_fac = 1.0 
     waveform_d_skip_n_data = 0
+    waveform_d_w_clk = True 
 
     ### these 3 paras are per waveform, will be overwritten by next waveform
     is_clk_gating = False
@@ -152,7 +152,7 @@ class CurrWaveform:
             print ('#ERROR: summation of clk rise time and fall time ratio cannot exceed duty cycle ratio\n')
             sys.exit(1)
         self.curr_mag_scale_fac_charge_consv =  1./ (self.clk_duty_cycle - 0.5 * self.t_rise_ratio_T - 0.5 * self.t_fall_ratio_T)
-        print('\n#INFO: ALL waveforms with clks with be scaled by ' + str(self.curr_mag_scale_fac_charge_consv) + '\n')
+        print('\n#INFO: ALL waveforms WITH clk edges with be scaled by ' + str(self.curr_mag_scale_fac_charge_consv) + '\n')
 
     def ClkGatingClear(self):
         self.is_clk_gating = False
@@ -166,6 +166,18 @@ class CurrWaveform:
         I_floor = 0.
         self.waveform_d_time_scale_fac = 1.
         self.waveform_d_mag_scale_fac = 1.
+
+        self.waveform_c_col_clk = ''
+        self.waveform_c_col_data = ''
+        self.waveform_c_time_scale_fac = 1.0 
+        self.waveform_c_mag_scale_fac = 1.0 
+        self.waveform_c_skip_n_data = 0
+        self.waveform_c_w_clk = True 
+        ### only applied to waveform D
+        self.waveform_d_time_scale_fac = 1.0 
+        self.waveform_d_mag_scale_fac = 1.0 
+        self.waveform_d_skip_n_data = 0
+        self.waveform_d_w_clk = True 
 
     def ReadClkGatingInfo(self, numOfConsecutiveClk_, numOfSkippedClk_, waveFormName):
         self.is_clk_gating = True 
@@ -277,7 +289,10 @@ class CurrWaveform:
             time_ = i * self.T_clk_in_ns
             amp_ = func_intep(time_)
             #### current amplitude scaled such that charge is const
-            self.AddOneUnit(amp_ * self.curr_mag_scale_fac_charge_consv, I_floor, i)  
+            if self.waveform_c_w_clk :
+                self.AddOneUnit(amp_ * self.curr_mag_scale_fac_charge_consv, I_floor, i)  
+            else:
+                self.AddOneUnit(amp_, amp_, i)  
             #self.AddOneUnit( src_profile_amplitude[i] * self.curr_mag_scale_fac_charge_consv, I_floor, i) 
             curr_delta = amp_ - amp_last
             if curr_delta > curr_delta_max:
@@ -342,7 +357,10 @@ class CurrWaveform:
             time_ = i * self.T_clk_in_ns
             amp_ = func_intep(time_)
             #### current amplitude scaled such that charge is const
-            self.AddOneUnit(amp_ * self.curr_mag_scale_fac_charge_consv, I_floor, i)      
+            if self.waveform_d_w_clk:
+                self.AddOneUnit(amp_ * self.curr_mag_scale_fac_charge_consv, I_floor, i)      
+            else:
+                self.AddOneUnit(amp_, amp_, i)  
 
             curr_delta = amp_ - amp_last
             if curr_delta > curr_delta_max:
@@ -409,7 +427,7 @@ class CurrWaveform:
                 self.RestoreFreq()
 
             elif wfp[0] == 'C': 
-                if len(wfp) < 10:
+                if len(wfp) < 11:
                     print("#ERROR: waveform type C parameters insufficient: " + wfp_orig)
                     sys.exit(1)
                 else:
@@ -423,10 +441,12 @@ class CurrWaveform:
                     self.waveform_c_col_clk = wfp[7]
                     self.waveform_c_col_data = wfp[8]
                     self.waveform_c_skip_n_data = int(wfp[9])
+                    if int(wfp[10]) == 0:
+                        self.waveform_c_w_clk = False 
 
-                    if len(wfp) == 13:
-                        self.ReadClkGatingInfo(int( wfp[10]), int( wfp[11]), 'D')
-                        self.UpdateFreq(float(wfp[12]))
+                    if len(wfp) == 14:
+                        self.ReadClkGatingInfo(int( wfp[11]), int( wfp[12]), 'D')
+                        self.UpdateFreq(float(wfp[13]))
 
                     self.AddScalingCurr_waveformC(I_floor)
                 self.ClkGatingClear()
@@ -434,7 +454,7 @@ class CurrWaveform:
                 self.RestoreFreq()
                 
             elif wfp[0] == 'D': 
-                if len(wfp) < 8:
+                if len(wfp) < 9:
                     print("#ERROR: waveform type D parameters insufficient: " + wfp_orig)
                     sys.exit(1)
                 else:
@@ -445,10 +465,12 @@ class CurrWaveform:
                     self.waveform_d_time_scale_fac = float(wfp[5])
                     self.waveform_d_mag_scale_fac  = float(wfp[6])
                     self.waveform_d_skip_n_data = int(wfp[7])
+                    if int(wfp[8]) == 0:
+                        self.waveform_d_w_clk = False 
 
-                    if len(wfp) == 11:
-                        self.ReadClkGatingInfo(int( wfp[8]), int( wfp[9]), 'D')
-                        self.UpdateFreq(float(wfp[10]))
+                    if len(wfp) == 12:
+                        self.ReadClkGatingInfo(int( wfp[9]), int( wfp[10]), 'D')
+                        self.UpdateFreq(float(wfp[11]))
 
                     self.AddScalingCurr_waveformD(I_floor)
                 self.ClkGatingClear()

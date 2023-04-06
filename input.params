@@ -21,5 +21,5 @@ B   10  5.  100.    0.
 B   10  100. 55.    0.
 A   15 55. 0.
 #D   C:\Users\jiangongwei\Documents\Python_data\pwr_envelop.txt   1.e-9   1.     0.  3. 0
-C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3.pkl  1.e-9   1.     0.  1.0     0.25    Cycles   pNNE 150000
+C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3.pkl  1.e-9   1.     0.  1.0     0.25    Cycles   pNNE 150000 1
 A   10   55.0  0.
