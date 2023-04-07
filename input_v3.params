@@ -1,8 +1,9 @@
-#INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor
-#INFO: waveform_type B linear_slope:    Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor
-#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | skip_first_n_data
-#INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor 
-#INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end
+#INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type B linear_slope_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type C scaled profile in .pkl:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | col_clk | col_data | skip_first_n_data | with_clk?1|0   | < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | skip_first_n_data  | with_clk?1|0   | < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor  < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end < | clk conti| clk skip | this_freq_in_GHz >
 #INFO: CLK_Freq unit: GHz
 #INFO: 0. < CLK_DutyCycle < 1.
 #INFO: 0. < CLK_T_RISE_as_ratio_of_CLK_Freq < 1.
@@ -14,6 +15,7 @@ CLK_Freq_in_GHz    2.0
 CLK_DutyCycle 0.9
 CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
 CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
+CLK_EDGE_EFF N
 
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 
@@ -30,7 +32,7 @@ B   100  0   20    0
 B   100  20   7    0 
 #B   150  20  10    0
 #E   1000 8  12   0
-C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3.pkl  1.e-9   1.     0.  1.0     0.25    Cycles   pNNE    150000    1
+C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3.pkl  1.e-9   1.     0.  1.0     0.25    Cycles   pNNE    150000
 #A    3000 20   0
 B   200  20  0    0  
 
@@ -39,7 +41,7 @@ B   200  20  0    0
 #B   100  0   5    0
 ##B   150  5  2.5    0
 ##E   1000 2  3   0
-#C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3.pkl  1.e-9   1.     0.  1.0     0.25    Cycles   pGMEM    150000      1
+#C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3.pkl  1.e-9   1.     0.  1.0     0.25    Cycles   pGMEM    150000
 ##A   3000   5   0
 #B   200  5  0    0
 
