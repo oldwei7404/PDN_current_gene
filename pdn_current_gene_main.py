@@ -548,12 +548,19 @@ class CurrWaveform:
 
     def WriteWaveform(self, fileName):
         fout = open(fileName, 'w+')
-        fout.write('Time(ns) \t Current(Amp)\n')
+        #fout.write('*Time(s) \t Current(Amp)\n')
+        #fout.write('I_src_???  YourNode1??? YourNode2??? pwl \n')
+
+        fout.write('.subckt    curr_src_YOUR_SRC_NAME\n')
+        fout.write('+ pin_pos ref_gnd\n\n')
+        fout.write('I_currSrc    pin_pos    ref_gnd    pwl\n')
+
         leng_rcd = len( self.currWaveform_list_time_ns)
         for i in range(0, leng_rcd):
-            fout.write(str(self.currWaveform_list_time_ns[i]) + '\t' + str(self.currWaveform_list_curr_Amp[i]) + '\n')  
+            fout.write('+ ' + str(self.currWaveform_list_time_ns[i]) + 'e-9\t' + str(self.currWaveform_list_curr_Amp[i]) + '\t\n')  
+        fout.write('\n.ends\n')
         fout.close()
-        print('#INFO: Current waveform output to ' + fileName)
+        print('#INFO: Current waveform output as PWL to ' + fileName)
 
     def WriteWaveform_InTimFormat(self, fileName):
         fileName_ = fileName.split('.')

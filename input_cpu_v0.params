@@ -15,7 +15,7 @@ CLK_Freq_in_GHz    2.5
 CLK_DutyCycle 0.9
 CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
 CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
-CLK_EDGE_EFF Y
+CLK_EDGE_EFF N
 
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 
@@ -37,10 +37,10 @@ CLK_EDGE_EFF Y
 
 # NOTE: 14 core CPU
 B   10   0   0  0
-B   250   0   12  0
-#E   2000 7 12  0
-A  500  12 0
-B  250   12  0  0
+B   72   0   13  0
+A  1000  13 0
+E   500 9 13  0
+B  250   11  0  0
 B 100  0   0  0
 
 ### comment: need to change VDD_in_Volt to 1.0, if vector 
