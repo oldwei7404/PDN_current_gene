@@ -63,7 +63,7 @@ class CurrWaveform:
     ### list of for scaling profiles, can support multiple profiles
     src_profile_envelope_fileName = ""
     src_profile_envelope_time_unit_in_sec = 1.
-    src_profile_envelope_waveform_unit = 1.
+    src_profile_envelope_waveform_amp_unit = 1.
 
     clk_freq_norm = 0
 
@@ -186,7 +186,7 @@ class CurrWaveform:
     def ClearWaveformInfo(self):
         self.src_profile_envelope_fileName = ''
         self.src_profile_envelope_time_unit_in_sec = 1.
-        self.src_profile_envelope_waveform_unit = 1.
+        self.src_profile_envelope_waveform_amp_unit = 1.
         I_floor = 0.
         self.waveform_d_time_scale_fac = 1.
         self.waveform_d_mag_scale_fac = 1.
@@ -300,10 +300,16 @@ class CurrWaveform:
         df = pd.read_pickle(self.src_profile_envelope_fileName)
         src_profile_time_in_ns = df[self.waveform_c_col_clk] 
         src_profile_time_in_ns = src_profile_time_in_ns[self.waveform_c_skip_n_data : -1] - src_profile_time_in_ns[self.waveform_c_skip_n_data]  ## time starts a 0
-        src_profile_time_in_ns = src_profile_time_in_ns * self.src_profile_envelope_time_unit_in_sec * 1.e9 * self.T_clk_in_ns * self.waveform_c_time_scale_fac
+
+        ### NOTE:  obsoleted: use Cycles to scale and obtain time steps
+        #src_profile_time_in_ns = src_profile_time_in_ns * self.src_profile_envelope_time_unit_in_sec * 1.e9 * self.T_clk_in_ns * self.waveform_c_time_scale_fac
+
+        # get time step directly from pkl
+        src_profile_time_in_ns = src_profile_time_in_ns * self.src_profile_envelope_time_unit_in_sec * 1.e9
+
         src_profile_amplitude = df[self.waveform_c_col_data] 
         src_profile_amplitude = src_profile_amplitude[self.waveform_c_skip_n_data : -1]
-        src_profile_amplitude = src_profile_amplitude * self.src_profile_envelope_waveform_unit/ self.voltage * self.waveform_c_mag_scale_fac
+        src_profile_amplitude = src_profile_amplitude * self.src_profile_envelope_waveform_amp_unit/ self.voltage * self.waveform_c_mag_scale_fac
         print('#INFO: waveform C columns: \n')
         print(df.columns)
         #tmp_col = df.columns
@@ -369,7 +375,7 @@ class CurrWaveform:
 
                     src_profile_time_in_ns.append( self.waveform_d_time_scale_fac * ( time_ns - time_ST))    ### nominal profile starts from 0
                     ### Note: divided by voltage to obtian current
-                    curr_ = float(cln_str[1]) * self.src_profile_envelope_waveform_unit/ self.voltage
+                    curr_ = float(cln_str[1]) * self.src_profile_envelope_waveform_amp_unit/ self.voltage
                     src_profile_amplitude.append( curr_ * self.waveform_d_mag_scale_fac )     
 
                 cln_str = fin.readline()                
@@ -466,7 +472,7 @@ class CurrWaveform:
                 else:
                     self.src_profile_envelope_fileName = wfp[1]
                     self.src_profile_envelope_time_unit_in_sec = float(wfp[2]) 
-                    self.src_profile_envelope_waveform_unit = float(wfp[3])
+                    self.src_profile_envelope_waveform_amp_unit = float(wfp[3])
                     I_floor = float(wfp[4])
                     self.waveform_c_time_scale_fac = float(wfp[5])
                     self.waveform_c_mag_scale_fac  = float(wfp[6])
@@ -491,7 +497,7 @@ class CurrWaveform:
                 else:
                     self.src_profile_envelope_fileName = wfp[1]
                     self.src_profile_envelope_time_unit_in_sec = float(wfp[2]) 
-                    self.src_profile_envelope_waveform_unit = float(wfp[3])
+                    self.src_profile_envelope_waveform_amp_unit = float(wfp[3])
                     I_floor = float(wfp[4])
                     self.waveform_d_time_scale_fac = float(wfp[5])
                     self.waveform_d_mag_scale_fac  = float(wfp[6])
@@ -551,7 +557,7 @@ class CurrWaveform:
         #fout.write('*Time(s) \t Current(Amp)\n')
         #fout.write('I_src_???  YourNode1??? YourNode2??? pwl \n')
 
-        fout.write('.subckt    curr_src_YOUR_SRC_NAME\n')
+        fout.write('.subckt    curr_src_???? \n')
         fout.write('+ pin_pos ref_gnd\n\n')
         fout.write('I_currSrc    pin_pos    ref_gnd    pwl\n')
 

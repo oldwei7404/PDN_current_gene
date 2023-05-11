@@ -27,23 +27,23 @@ CLK_EDGE_EFF N
 #B   100  9  1    1
 
 ## NOTE: this is for PA  block
-A   10  0  0    
-#B   100  0   20    0 
-#B   100  20   7    0 
-#B   150  20  10    0
-#E   1000 8  12   0
-C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0426.pkl  1.e-9   1.     0.  1.0     0.25    Cycles   pNNE    0
-#A    3000 20   0
-#B   200  20  0    0  
+#A   10  0  0    
+##B   100  0   20    0 
+##B   100  20   7    0 
+##B   150  20  10    0
+##E   1000 8  12   0
+#C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0510_200clk.pkl  1.e-12   1.     0.  1.     0.25    TS_ps   pNNE_PA    0
+##A    3000 20   0
+##B   200  20  0    0  
 
 ## NOTE: this is for MA  block
-#A   10  0  0
-##B   100  0   5    0
-##B   150  5  2.5    0
-##E   1000 2  3   0
-#C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0426.pkl  1.e-9   1.     0.  1.0     0.25    Cycles   pGMEM    0
-##A   3000   5   0
-##B   200  5  0    0
+A   10  0  0
+#B   100  0   5    0
+#B   150  5  2.5    0
+#E   1000 2  3   0
+C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0510_100clk.pkl  1.e-12   1.     0.  1.     0.25    TS_ps   pGMEM    0
+#A   3000   5   0
+#B   200  5  0    0
 
 
 # NOTE: for stall experiment
