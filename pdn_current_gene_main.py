@@ -72,12 +72,15 @@ class CurrWaveform:
     T_clk_in_ns = 0
 
     clk_duty_cycle = 0.5
+    clk_edge_peak_floor_ratio = 0.8
     t_rise_ratio_T = 0.1
     t_fall_ratio_T = 0.1
     nominal_I = 1.0
     I_lkg = 1.0
     voltage = 0.0
-    curr_mag_scale_fac_charge_consv = 1.0
+    r_curr_mag_scale_fac_charge_consv_h2 = 1.0
+    r_curr_mag_scale_fac_charge_consv_h1 = r_curr_mag_scale_fac_charge_consv_h2 * 0.5  ### default
+    
     is_clk_eff = True
     ### only applied to waveform C
     waveform_c_col_clk = ''
@@ -128,7 +131,7 @@ class CurrWaveform:
                     self.clk_duty_cycle = float( cln_str[1])
                     print('#INFO: CLK duty cycle:\t' + str(self.clk_duty_cycle))
                     set_cnt = set_cnt +1
-                    
+
                 elif cln_str[0] == 'CLK_T_RISE_as_ratio_of_CLK_Freq':
                     self.t_rise_ratio_T = float( cln_str[1])
                     print('#INFO: CLK rise time (ratio of T):\t' + str(self.t_rise_ratio_T))
@@ -175,8 +178,8 @@ class CurrWaveform:
         if (self.t_rise_ratio_T + self.t_fall_ratio_T) > self.clk_duty_cycle:
             print ('#ERROR: summation of clk rise time and fall time ratio cannot exceed duty cycle ratio\n')
             sys.exit(1)
-        self.curr_mag_scale_fac_charge_consv =  1./ (self.clk_duty_cycle - 0.5 * self.t_rise_ratio_T - 0.5 * self.t_fall_ratio_T)
-        print('\n#INFO: ALL waveforms WITH clk edges with be scaled by ' + str(self.curr_mag_scale_fac_charge_consv) + '\n')
+        self.r_curr_mag_scale_fac_charge_consv_h2 =  1./ (self.clk_duty_cycle - 0.5 * self.t_rise_ratio_T - 0.5 * self.t_fall_ratio_T)  ### this is assuming floor is 0
+        print('\n#INFO: defaullt waveforms WITH clk edges with be scaled by ' + str(self.r_curr_mag_scale_fac_charge_consv_h2) + '\n')
 
     def ClkGatingClear(self):
         self.is_clk_gating = False
@@ -187,7 +190,7 @@ class CurrWaveform:
         self.src_profile_envelope_fileName = ''
         self.src_profile_envelope_time_unit_in_sec = 1.
         self.src_profile_envelope_waveform_amp_unit = 1.
-        I_floor = 0.
+        I_floor_ratio = 0.
         self.waveform_d_time_scale_fac = 1.
         self.waveform_d_mag_scale_fac = 1.
 
@@ -221,8 +224,8 @@ class CurrWaveform:
 
 
     ### Function: Add one unit
-    ### Optional clk gating: parameters after "I_floor" is optional to enable clk gating
-    def AddOneUnit(self, I_amp, I_floor, clk_seq = 0):
+    ### Optional clk gating: parameters after "I_floor_ratio" is optional to enable clk gating
+    def AddOneUnit(self, I_amp, I_floor_val, clk_seq = 0):
         tStart = self.currWaveform_list_time_ns[-1]
         ### no clk gating
         if not self.is_clk_gating:
@@ -233,10 +236,10 @@ class CurrWaveform:
             self.currWaveform_list_curr_Amp.append(I_amp)
 
             self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.clk_duty_cycle)
-            self.currWaveform_list_curr_Amp.append(I_floor)
+            self.currWaveform_list_curr_Amp.append(I_floor_val)
 
             self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns)
-            self.currWaveform_list_curr_Amp.append(I_floor)
+            self.currWaveform_list_curr_Amp.append(I_floor_val)
             return ### exit function if no clk gating
 
         ### continue if clk gated 
@@ -250,29 +253,33 @@ class CurrWaveform:
             self.currWaveform_list_curr_Amp.append(I_amp)
 
             self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.clk_duty_cycle)
-            self.currWaveform_list_curr_Amp.append(I_floor)
+            self.currWaveform_list_curr_Amp.append(I_floor_val)
 
             self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns)
-            self.currWaveform_list_curr_Amp.append(I_floor)
+            self.currWaveform_list_curr_Amp.append(I_floor_val)
         else:
-            self.AddOneUnit(I_floor, I_floor)
+            self.AddOneUnit(I_floor_val, I_floor_val)   ### ??? gated clk pwr to be determined 
 
+    def UpdateClkEdgeWaveformPara(self, I_floor_ratio):
+        self.r_curr_mag_scale_fac_charge_consv_h2 =  1./ ( I_floor_ratio + (self.clk_duty_cycle - 0.5 * self.t_rise_ratio_T - 0.5 * self.t_fall_ratio_T) * (1. - I_floor_ratio) )  ### this is assuming floor is 0
+        self.r_curr_mag_scale_fac_charge_consv_h1 = self.r_curr_mag_scale_fac_charge_consv_h2 * I_floor_ratio
+        print('#INFO: this waveforms with be scaled (if clk edged) by: ' + str(self.r_curr_mag_scale_fac_charge_consv_h2) + ' and ' + str(self.r_curr_mag_scale_fac_charge_consv_h1) +'\n')
 
     ### Function: Append time length of nominal clk current
-    def AddConstCLK(self, NumOfUnit, I_amp, I_floor):
+    def AddConstCLK(self, NumOfUnit, I_amp):
         for i in range (0, NumOfUnit):
             if self.is_clk_eff:
-                self.AddOneUnit(I_amp * self.curr_mag_scale_fac_charge_consv, I_floor, i)
+                self.AddOneUnit(I_amp * self.r_curr_mag_scale_fac_charge_consv_h2, I_amp * self.r_curr_mag_scale_fac_charge_consv_h1, i)
             else: ## if no clk eff, this is really just piece wise linear
                 self.AddOneUnit(I_amp, I_amp, i)
 
     ### Function: Append linear ramp up curent from I_start to I_end witihn t_ramp time
-    def AddLinearSlopeCurr(self, numOfUnit, I_start, I_end, I_floor):
+    def AddLinearSlopeCurr(self, numOfUnit, I_start, I_end):
         I_step = (I_end - I_start)/numOfUnit
         for i in range(0, numOfUnit):
             I_tmp = I_start + (i+1) * I_step
             if self.is_clk_eff:
-                self.AddOneUnit(I_tmp * self.curr_mag_scale_fac_charge_consv, I_floor, i)
+                self.AddOneUnit(I_tmp * self.r_curr_mag_scale_fac_charge_consv_h2, I_tmp * self.r_curr_mag_scale_fac_charge_consv_h1, i)
             else:
                 self.AddOneUnit(I_tmp, I_tmp, i)
     
@@ -287,7 +294,7 @@ class CurrWaveform:
             self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns)
             self.currWaveform_list_curr_Amp.append(I_tmp + I_step)           
 
-    def AddScalingCurr_waveformC(self, I_floor):
+    def AddScalingCurr_waveformC(self):
         ### read in source file
         if not os.path.exists(self.src_profile_envelope_fileName):
             print('#ERROR: Source profile envelope file <' + self.src_profile_envelope_fileName + '> does not exist !')
@@ -327,10 +334,10 @@ class CurrWaveform:
             amp_ = func_intep(time_)
             #### current amplitude scaled such that charge is const
             if self.is_clk_eff :
-                self.AddOneUnit(amp_ * self.curr_mag_scale_fac_charge_consv, I_floor, i)  
+                self.AddOneUnit(amp_ * self.r_curr_mag_scale_fac_charge_consv_h2, amp_ * self.r_curr_mag_scale_fac_charge_consv_h1, i)  
             else:
                 self.AddOneUnit(amp_, amp_, i)  
-            #self.AddOneUnit( src_profile_amplitude[i] * self.curr_mag_scale_fac_charge_consv, I_floor, i) 
+            #self.AddOneUnit( src_profile_amplitude[i] * self.r_curr_mag_scale_fac_charge_consv_h2, I_floor_ratio, i) 
             curr_delta = amp_ - amp_last
             if curr_delta > curr_delta_max:
                 curr_delta_max = curr_delta
@@ -340,7 +347,7 @@ class CurrWaveform:
 
         print('#INFO: scaled worst pos. delta current per cycle(before charge scaling): '+str(curr_delta_max) + ', scaled worst neg. delta current per cycle(before charge scaling): ' + str(curr_delta_min) )
 
-    def AddScalingCurr_waveformD(self, I_floor):
+    def AddScalingCurr_waveformD(self):
         ### read in source file
         if not os.path.exists(self.src_profile_envelope_fileName):
             print('#ERROR: Source profile envelope file <' + self.src_profile_envelope_fileName + '> does not exist !')
@@ -395,7 +402,7 @@ class CurrWaveform:
             amp_ = func_intep(time_)
             #### current amplitude scaled such that charge is const
             if self.is_clk_eff:
-                self.AddOneUnit(amp_ * self.curr_mag_scale_fac_charge_consv, I_floor, i)      
+                self.AddOneUnit(amp_ * self.r_curr_mag_scale_fac_charge_consv_h2, amp_ * self.r_curr_mag_scale_fac_charge_consv_h1, i)      
             else:
                 self.AddOneUnit(amp_, amp_, i)  
 
@@ -409,13 +416,13 @@ class CurrWaveform:
         print('#INFO: scaled worst pos. delta current per cycle(before charge scaling): '+str(curr_delta_max) + ',scaled worst neg. delta current per cycle(before charge scaling): ' + str(curr_delta_min) )
 
     ### Function: Add random current within given upper and lower bound
-    def AddRandWithinRange(self, numOfUnit, I_floor, I_bd_lo, I_bd_up):
+    def AddRandWithinRange(self, numOfUnit, I_bd_lo, I_bd_up):
         rng = numpy.random.default_rng()
         currValList = rng.random((numOfUnit))
         for idx, i in enumerate( currValList):
             curr = I_bd_lo + (I_bd_up - I_bd_lo) * i
             if self.is_clk_eff:
-                self.AddOneUnit(curr * self.curr_mag_scale_fac_charge_consv, I_floor, idx)
+                self.AddOneUnit(curr * self.r_curr_mag_scale_fac_charge_consv_h2, curr * self.r_curr_mag_scale_fac_charge_consv_h1, idx)
             else:
                 self.AddOneUnit(curr, curr, idx)
 
@@ -438,13 +445,13 @@ class CurrWaveform:
                     sys.exit(1)
                 else:
                     I_curr = float( wfp[2])
-                    I_floor = float( wfp[3])
+                    I_floor_ratio = float( wfp[3])
 
                     if len(wfp) == 7: ## clk gated 
                         self.ReadClkGatingInfo(int( wfp[4]), int( wfp[5]), 'A')
                         self.UpdateFreq(float(wfp[6]))
-
-                    self.AddConstCLK(numOfUnit, I_curr, I_floor)
+                    self.UpdateClkEdgeWaveformPara(I_floor_ratio)
+                    self.AddConstCLK(numOfUnit, I_curr )
                 self.ClkGatingClear()
                 self.RestoreFreq()
 
@@ -455,13 +462,14 @@ class CurrWaveform:
                 else:
                     I_start = float( wfp[2])
                     I_end = float( wfp[3])
-                    I_floor = float( wfp[4])          
+                    I_floor_ratio = float( wfp[4])          
 
                     if len(wfp) == 8:
                         self.ReadClkGatingInfo(int( wfp[5]), int( wfp[6]), 'B')
                         self.UpdateFreq(float(wfp[7]))
 
-                    self.AddLinearSlopeCurr(numOfUnit, I_start, I_end, I_floor)               
+                    self.UpdateClkEdgeWaveformPara(I_floor_ratio)
+                    self.AddLinearSlopeCurr(numOfUnit, I_start, I_end)               
                 self.ClkGatingClear()
                 self.RestoreFreq()
 
@@ -473,7 +481,7 @@ class CurrWaveform:
                     self.src_profile_envelope_fileName = wfp[1]
                     self.src_profile_envelope_time_unit_in_sec = float(wfp[2]) 
                     self.src_profile_envelope_waveform_amp_unit = float(wfp[3])
-                    I_floor = float(wfp[4])
+                    I_floor_ratio = float(wfp[4])
                     self.waveform_c_time_scale_fac = float(wfp[5])
                     self.waveform_c_mag_scale_fac  = float(wfp[6])
                     ### column names in pkl
@@ -485,7 +493,8 @@ class CurrWaveform:
                         self.ReadClkGatingInfo(int( wfp[10]), int( wfp[11]), 'D')
                         self.UpdateFreq(float(wfp[12]))
 
-                    self.AddScalingCurr_waveformC(I_floor)
+                    self.UpdateClkEdgeWaveformPara(I_floor_ratio)
+                    self.AddScalingCurr_waveformC()
                 self.ClkGatingClear()
                 self.ClearWaveformInfo()
                 self.RestoreFreq()
@@ -498,7 +507,7 @@ class CurrWaveform:
                     self.src_profile_envelope_fileName = wfp[1]
                     self.src_profile_envelope_time_unit_in_sec = float(wfp[2]) 
                     self.src_profile_envelope_waveform_amp_unit = float(wfp[3])
-                    I_floor = float(wfp[4])
+                    I_floor_ratio = float(wfp[4])
                     self.waveform_d_time_scale_fac = float(wfp[5])
                     self.waveform_d_mag_scale_fac  = float(wfp[6])
                     self.waveform_d_skip_n_data = int(wfp[7])
@@ -507,7 +516,8 @@ class CurrWaveform:
                         self.ReadClkGatingInfo(int( wfp[8]), int( wfp[9]), 'D')
                         self.UpdateFreq(float(wfp[10]))
 
-                    self.AddScalingCurr_waveformD(I_floor)
+                    self.UpdateClkEdgeWaveformPara(I_floor_ratio)
+                    self.AddScalingCurr_waveformD()
                 self.ClkGatingClear()
                 self.ClearWaveformInfo()
                 self.RestoreFreq()
@@ -517,7 +527,7 @@ class CurrWaveform:
                     print('#ERROR: waveform type E parameters insufficient: ' + wfp_orig)
                     sys.exit(1)
                 else:
-                    I_floor = float(wfp[4])
+                    I_floor_ratio = float(wfp[4])
                     I_bd_lo = float(wfp[2])
                     I_bd_up = float(wfp[3])
                     if I_bd_lo > I_bd_up:
@@ -529,7 +539,8 @@ class CurrWaveform:
                         self.ReadClkGatingInfo(int( wfp[5]), int( wfp[6]), 'E')
                         self.UpdateFreq(float(wfp[7]))
 
-                    self.AddRandWithinRange(numOfUnit, I_floor, I_bd_lo, I_bd_up)
+                    self.UpdateClkEdgeWaveformPara(I_floor_ratio)
+                    self.AddRandWithinRange(numOfUnit, I_bd_lo, I_bd_up)
                 self.ClkGatingClear()
                 self.RestoreFreq()
 

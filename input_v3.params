@@ -15,38 +15,31 @@ CLK_Freq_in_GHz    2.0
 CLK_DutyCycle 0.9
 CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
 CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
-CLK_EDGE_EFF N
+CLK_EDGE_EFF Y
 
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 
-# NOTE: ramp up equivalent to 100A in 100 ns in whole NNE
-#A   10  1  1
-#B   100  1   12    1
-#B   150  12  6    1
-#E   1000 5  9   1
-#B   100  9  1    1
+## NOTE: one PA tile 
+A   10          0.      0.5
+B   300         0.      1.54    0.5
+B   100         1.54     12.     0.5
+A   10000       12.     0.5
+B   100         12.     1.54     0.5
+B   300         1.54    0.    0.5
+A   10000       0.      0.5
 
-## NOTE: this is for PA  block
+
+## NOTE: for PA  block: pNNE_PA;    MA block: pGMEM
 #A   10  0  0    
 ##B   100  0   20    0 
 ##B   100  20   7    0 
 ##B   150  20  10    0
 ##E   1000 8  12   0
-#C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0510_200clk.pkl  1.e-12   1.     0.  1.     0.25    TS_ps   pNNE_PA    0
+#C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0518_200clk_0scale_continue_idle_clk.pkl  1.e-12   1.     0.  1.     0.25    TS_ps   pGMEM    0
 ##A    3000 20   0
 ##B   200  20  0    0  
 
-## NOTE: this is for MA  block
-A   10  0  0
-#B   100  0   5    0
-#B   150  5  2.5    0
-#E   1000 2  3   0
-C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0510_100clk.pkl  1.e-12   1.     0.  1.     0.25    TS_ps   pGMEM    0
-#A   3000   5   0
-#B   200  5  0    0
-
-
-# NOTE: for stall experiment
+## NOTE: for stall experiment
 #A   10  0  0
 #B   100  0   10    0
 #A   500  10  0
@@ -58,10 +51,17 @@ C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2
 #A   500  10  0
 #A   50  0   0
 
-# NOTE: for stall experiment 2
+## NOTE: for stall experiment 2
 #F   10  0   0
 #F   100 0   10
 #F   500 10  10
 #F   6  0   0
 #F   500 10  10
 #F   100 10  0
+
+## NOTE: for voltage waveforms (no clk)
+#B   200.     0.      0.8     0.
+#A   2000.    0.8     0.
+#B   2000.    0.8     0.65    0.
+#B   2000.    0.65    0.8     0.
+#A   2000.    0.8     0.

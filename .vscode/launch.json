@@ -10,7 +10,7 @@
             "request": "launch",
             "program": "${file}",
             "console": "integratedTerminal",
-            "args":["-d C:\\Users\\jiangongwei\\OneDrive - Rivian Automotive, LLC\\Documents\\Rivian_work\\script_py\\PDN_current_gene\\PDN_current_gene", "-i input.params", "-o out_curr_profile.txt"],
+            "args":["-d C:\\Users\\jiangongwei\\OneDrive - Rivian Automotive, LLC\\Documents\\Rivian_work\\script_py\\PDN_current_gene\\PDN_current_gene", "-i input.params", "-o out_curr_profile.inc"],
             // "justMyCode": true
         }
     ]
