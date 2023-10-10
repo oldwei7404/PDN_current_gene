@@ -11,33 +11,34 @@
 #INFO: 0. < (CLK_T_RISE_as_ratio_of_CLK_Freq + CLK_T_FALL_as_ratio_of_CLK_Freq) < CLK_DutyCycle
 
 VDD_in_Volt  0.75
+POWER_0_OR_CURR_1   1
 CLK_Freq_in_GHz    2.0
 CLK_DutyCycle 0.9
 CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
 CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
-CLK_EDGE_EFF Y
+CLK_EDGE_EFF N
 
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 
 ## NOTE: one PA tile 
-A   10          0.      0.5
-B   300         0.      1.54    0.5
-B   100         1.54     12.     0.5
-A   10000       12.     0.5
-B   100         12.     1.54     0.5
-B   300         1.54    0.    0.5
-A   10000       0.      0.5
+#A   10          0.      0.0
+#B   300         0.      1.54    0.0
+#B   100         1.54     12.     0.0
+#A   10000       12.     0.0
+#B   100         12.     1.54     0.0
+#B   300         1.54    0.    0.0
+#A   10000       0.      0.0
 
 
 ## NOTE: for PA  block: pNNE_PA;    MA block: pGMEM
-#A   10  0  0    
-##B   100  0   20    0 
-##B   100  20   7    0 
-##B   150  20  10    0
-##E   1000 8  12   0
-#C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0518_200clk_0scale_continue_idle_clk.pkl  1.e-12   1.     0.  1.     0.25    TS_ps   pGMEM    0
-##A    3000 20   0
-##B   200  20  0    0  
+A   10  0  0    
+#B   100  0   20    0 
+#B   100  20   7    0 
+#B   150  20  10    0
+#E   1000 8  12   0
+C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0518_200clk_0scale_continue_idle_clk.pkl  1.e-12   1.     0.  1.     0.25    TS_ps   pGMEM    0
+#A    3000 20   0
+#B   200  20  0    0  
 
 ## NOTE: for stall experiment
 #A   10  0  0
@@ -60,8 +61,8 @@ A   10000       0.      0.5
 #F   100 10  0
 
 ## NOTE: for voltage waveforms (no clk)
-#B   200.     0.      0.8     0.
-#A   2000.    0.8     0.
-#B   2000.    0.8     0.65    0.
-#B   2000.    0.65    0.8     0.
-#A   2000.    0.8     0.
+#A   10.     0.      0.0     0.
+#B   200.    0.     60.    0.
+#A   5000.    60.     60.    0.
+#B   200.    60.    0.     0.
+#A   2000.    0.0     0.

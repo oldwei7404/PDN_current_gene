@@ -11,8 +11,9 @@
 #INFO: 0. < (CLK_T_RISE_as_ratio_of_CLK_Freq + CLK_T_FALL_as_ratio_of_CLK_Freq) < CLK_DutyCycle
 
 #INFO: need to change VDD_in_Volt to 1.0, if waveform D is current vector, rather than power vector
-VDD_in_Volt  0.75
-CLK_Freq_in_GHz    2.5
+VDD_in_Volt  0.815
+POWER_0_OR_CURR_1   1
+CLK_Freq_in_GHz    25
 CLK_DutyCycle 0.9
 CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
 CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
@@ -21,9 +22,9 @@ CLK_EDGE_EFF N
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 
 #NOTE: profile for GPU 
-B   10   0   0  0
-B   20  0.   2.5    0.
-A   5000   2.5  0.  
+#B   10   0   0  0
+#B   20  0.   2.5    0.
+#A   5000   2.5  0.  
 
 #F   10   0   0
 #F   18   0   11.6
@@ -36,14 +37,14 @@ A   5000   2.5  0.
 ##A  200  6 0
 #B   200   10  0  0
 
-# NOTE: 14 core CPU
+## NOTE: 14 core CPU
 #B   10   0   0  0
-#B   250   0   13  0
-#A  1000  13 0
-#E  500 9 13  0
-#A  1000  13 0
-#B  250   13  0  0
-#B 100  0   0  0
+#B   55   0   17  0
+#A  2000  17 0
+#E  1000 12 17  0
+#A  2000  17 0
+#B  55   17  0  0
+#B 3000  0   0  0
 
 ### comment: need to change VDD_in_Volt to 1.0, if vector 
 #F   10   0   0
@@ -55,3 +56,9 @@ A   5000   2.5  0.
 #A   2000 12  0
 
 
+# NOTE: 14 core CPU, use 10/10 power profile 
+B    10   0   14  0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_currentProfile_0p815V.txt  1.  1.  0.     1.   1.      0   0
+B    500   30  30  0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_currentProfile_0p815V.txt  1.  1.  0.     1.   1.      0   0
+B    50    30  0   0

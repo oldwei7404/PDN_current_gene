@@ -16,6 +16,7 @@
 ### START example input.params
 ##INFO: need to change VDD_in_Volt to 1.0, if waveform D is current vector, rather than power vector
 # VDD_in_Volt  0.75
+# POWER_0_OR_CURR_1   1
 # CLK_Freq_in_GHz    3.0
 # CLK_DutyCycle 0.9
 # CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
@@ -59,6 +60,8 @@ class CurrWaveform:
     currWaveform_list_time_ns = []  # unit: ns
     currWaveform_list_curr_Amp = []   # unit: Amp
     waveform_params_list = []
+
+    power_0_or_curr_1 = 0
 
     ### list of for scaling profiles, can support multiple profiles
     src_profile_envelope_fileName = ""
@@ -149,6 +152,14 @@ class CurrWaveform:
                         exit(-1)
                     print('#INFO: Vdd rail voltage (V):\t' + str(self.voltage))
                     set_cnt = set_cnt +1
+                
+                elif cln_str[0] == 'POWER_0_OR_CURR_1':
+                    tmp = int(cln_str[1])
+                    if tmp == 0:
+                        self.power_0_or_curr_1 = 0
+                    elif tmp == 1:
+                        self.power_0_or_curr_1 = 1
+                    set_cnt = set_cnt +1
 
                 elif cln_str[0] == 'CLK_EDGE_EFF':
                     if cln_str[1] == 'Y' or cln_str[1] == 'y':
@@ -163,8 +174,8 @@ class CurrWaveform:
 
                 else:  
                     ## only proceed if general settings are completed
-                    if set_cnt != 6:
-                        print('#ERROR: 6 general settings needed, %d identified, quit\n', set_cnt)
+                    if set_cnt != 7:
+                        print('#ERROR: 7 general settings needed, %d identified, quit\n', set_cnt)
                         exit(-1)
                     # read in waveform params
                     self.waveform_params_list.append(cln_str_src)
@@ -316,7 +327,10 @@ class CurrWaveform:
 
         src_profile_amplitude = df[self.waveform_c_col_data] 
         src_profile_amplitude = src_profile_amplitude[self.waveform_c_skip_n_data : -1]
-        src_profile_amplitude = src_profile_amplitude * self.src_profile_envelope_waveform_amp_unit/ self.voltage * self.waveform_c_mag_scale_fac
+        if self.power_0_or_curr_1 == 0:
+            src_profile_amplitude = src_profile_amplitude * self.src_profile_envelope_waveform_amp_unit/ self.voltage * self.waveform_c_mag_scale_fac
+        else:
+            src_profile_amplitude = src_profile_amplitude * self.src_profile_envelope_waveform_amp_unit * self.waveform_c_mag_scale_fac
         print('#INFO: waveform C columns: \n')
         print(df.columns)
         #tmp_col = df.columns
@@ -382,7 +396,11 @@ class CurrWaveform:
 
                     src_profile_time_in_ns.append( self.waveform_d_time_scale_fac * ( time_ns - time_ST))    ### nominal profile starts from 0
                     ### Note: divided by voltage to obtian current
-                    curr_ = float(cln_str[1]) * self.src_profile_envelope_waveform_amp_unit/ self.voltage
+                    if self.power_0_or_curr_1 == 0:
+                        curr_ = float(cln_str[1]) * self.src_profile_envelope_waveform_amp_unit/ self.voltage
+                    else:
+                        curr_ = float(cln_str[1])
+
                     src_profile_amplitude.append( curr_ * self.waveform_d_mag_scale_fac )     
 
                 cln_str = fin.readline()                
@@ -595,6 +613,16 @@ class CurrWaveform:
         fout.close()
         print('#INFO: Current waveform TIM format output: ' + fileName)
 
+    def WriteWaveform_ToCSV(self, fileName):
+        fileName = fileName + '.csv'
+        fout = open(fileName, 'w+')
+        leng_rcd = len( self.currWaveform_list_time_ns)
+        for i in range(0, leng_rcd):
+            fout.write(str(self.currWaveform_list_time_ns[i]) + 'e-9, \t' + str(self.currWaveform_list_curr_Amp[i]) + '\t\n')  
+
+        fout.close()
+        print('#INFO: Current waveform output as PWL to ' + fileName)
+
     def PlotWaveform(self):
         plt.rcParams.update({'font.size': 15})
         plt.plot(self.currWaveform_list_time_ns, self.currWaveform_list_curr_Amp, 'b', linewidth=0.2, label='Waveform')
@@ -656,6 +684,7 @@ waveformInst = CurrWaveform(file_in_para)
 waveformInst.CompositeWaveform()
 waveformInst.WriteWaveform(file_out_waveform)
 waveformInst.WriteWaveform_InTimFormat(file_out_waveform)
+waveformInst.WriteWaveform_ToCSV(file_out_waveform)
 
 if is_print_wf:
     waveformInst.PlotWaveform()
