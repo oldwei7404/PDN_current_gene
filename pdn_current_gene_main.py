@@ -16,7 +16,7 @@
 ### START example input.params
 ##INFO: need to change VDD_in_Volt to 1.0, if waveform D is current vector, rather than power vector
 # VDD_in_Volt  0.75
-# POWER_0_OR_CURR_1   1
+# PROFILE_POWER_0_OR_CURR_1   1
 # CLK_Freq_in_GHz    3.0
 # CLK_DutyCycle 0.9
 # CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
@@ -61,7 +61,7 @@ class CurrWaveform:
     currWaveform_list_curr_Amp = []   # unit: Amp
     waveform_params_list = []
 
-    power_0_or_curr_1 = 0
+    profile_power_0_or_curr_1 = 0
 
     ### list of for scaling profiles, can support multiple profiles
     src_profile_envelope_fileName = ""
@@ -153,12 +153,8 @@ class CurrWaveform:
                     print('#INFO: Vdd rail voltage (V):\t' + str(self.voltage))
                     set_cnt = set_cnt +1
                 
-                elif cln_str[0] == 'POWER_0_OR_CURR_1':
-                    tmp = int(cln_str[1])
-                    if tmp == 0:
-                        self.power_0_or_curr_1 = 0
-                    elif tmp == 1:
-                        self.power_0_or_curr_1 = 1
+                elif cln_str[0] == 'PROFILE_POWER_0_OR_CURR_1':
+                    self.profile_power_0_or_curr_1 = int(cln_str[1])
                     set_cnt = set_cnt +1
 
                 elif cln_str[0] == 'CLK_EDGE_EFF':
@@ -311,7 +307,8 @@ class CurrWaveform:
             print('#ERROR: Source profile envelope file <' + self.src_profile_envelope_fileName + '> does not exist !')
             sys.exit(1)
 
-        print('#INFO: Waveform C magnitdue is scaled by 1/voltage = '+ str(1/self.voltage))
+        if self.profile_power_0_or_curr_1 == 0:
+            print('#INFO: Input is power value, waveform C magnitdue is scaled by 1/voltage = '+ str(1/self.voltage))
         if self.waveform_c_skip_n_data != 0:
             print('#INFO: skipping first ' + str(self.waveform_c_skip_n_data) + ' data samplings')
 
@@ -327,7 +324,7 @@ class CurrWaveform:
 
         src_profile_amplitude = df[self.waveform_c_col_data] 
         src_profile_amplitude = src_profile_amplitude[self.waveform_c_skip_n_data : -1]
-        if self.power_0_or_curr_1 == 0:
+        if self.profile_power_0_or_curr_1 == 0:
             src_profile_amplitude = src_profile_amplitude * self.src_profile_envelope_waveform_amp_unit/ self.voltage * self.waveform_c_mag_scale_fac
         else:
             src_profile_amplitude = src_profile_amplitude * self.src_profile_envelope_waveform_amp_unit * self.waveform_c_mag_scale_fac
@@ -367,7 +364,8 @@ class CurrWaveform:
             print('#ERROR: Source profile envelope file <' + self.src_profile_envelope_fileName + '> does not exist !')
             sys.exit(1)
 
-        print('#INFO: Waveform D magnitdue is scaled by 1/voltage = '+ str(1/self.voltage)+'\n')
+        if self.profile_power_0_or_curr_1 == 0:
+            print('#INFO: Input is power value, waveform D magnitdue is scaled by 1/voltage = '+ str(1/self.voltage))
         if self.waveform_d_skip_n_data != 0:
             print('#INFO: skipping first ' + str(self.waveform_d_skip_n_data) + ' data samplings')
 
@@ -396,10 +394,10 @@ class CurrWaveform:
 
                     src_profile_time_in_ns.append( self.waveform_d_time_scale_fac * ( time_ns - time_ST))    ### nominal profile starts from 0
                     ### Note: divided by voltage to obtian current
-                    if self.power_0_or_curr_1 == 0:
+                    if self.profile_power_0_or_curr_1 == 0:
                         curr_ = float(cln_str[1]) * self.src_profile_envelope_waveform_amp_unit/ self.voltage
                     else:
-                        curr_ = float(cln_str[1])
+                        curr_ = float(cln_str[1]) * self.src_profile_envelope_waveform_amp_unit
 
                     src_profile_amplitude.append( curr_ * self.waveform_d_mag_scale_fac )     
 

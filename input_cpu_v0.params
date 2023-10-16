@@ -12,7 +12,7 @@
 
 #INFO: need to change VDD_in_Volt to 1.0, if waveform D is current vector, rather than power vector
 VDD_in_Volt  0.815
-POWER_0_OR_CURR_1   1
+PROFILE_POWER_0_OR_CURR_1   0
 CLK_Freq_in_GHz    25
 CLK_DutyCycle 0.9
 CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
@@ -56,9 +56,35 @@ CLK_EDGE_EFF N
 #A   2000 12  0
 
 
-# NOTE: 14 core CPU, use 10/10 power profile 
-B    10   0   14  0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_currentProfile_0p815V.txt  1.  1.  0.     1.   1.      0   0
-B    500   30  30  0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_currentProfile_0p815V.txt  1.  1.  0.     1.   1.      0   0
-B    50    30  0   0
+## NOTE: 14 core CPU, use 10/10 power profile, v2
+#B    100   0   13  0
+#B    100   13   13  0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_currentProfile_0p815V.txt  1.  1.  0.     1.   1.      0   0
+#B    500   25  25  0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_currentProfile_0p815V.txt  1.  1.  0.     1.   1.      0   0
+#B    50    20  0   0
+
+
+## NOTE: 14 core CPU, use 10/10 power profile, v3
+#B    100   0   13  0
+#B    500   13   13  0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_l3_2.5GHz__currentProfile_0p815V.txt  1.  1.  0.     1.   1.      0   0
+#B    500   20  20  0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_l3_2.5GHz_currentProfile_0p815V.txt  1.  1.  0.     1.   1.      0   0
+#B    50    13  0   0
+
+## NOTE: 14 core CPU, use 10/10 power profile, v2p2 =============!!!! waveforms are POWER, NOT current, need to set power and voltage above !!! ===================
+#B    100   0   13  0
+#B    100   13   13  0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.0GHz_jgwei.txt  1.e-10   1.  0.     1.   1.      0   0
+#B    500   29  30  0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.0GHz_jgwei.txt  1.e-10   1.  0.     1.   1.      0   0
+#B    50    18  0   0
+
+# NOTE: 14 core CPU, use 10/10 power profile, v3p2 =============!!!! waveforms are POWER, NOT current, need to set power and voltage above !!! ===================
+B    100   0   13  0
+B    500   13   15  0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_l3_2.0GHz_jgwei.txt  1.e-10   1.  0.     1.   1.      0   0
+B    1000   17  20  0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_l3_2.0GHz_jgwei.txt  1.e-10   1.  0.     1.   1.      0   0
+B    50    13  0   0
