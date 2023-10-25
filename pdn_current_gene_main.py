@@ -335,7 +335,6 @@ class CurrWaveform:
         src_profile_time_in_ns = src_profile_time_in_ns.values.tolist()
         src_profile_amplitude  = src_profile_amplitude.values.tolist()
         func_intep = scipy.interpolate.interp1d(src_profile_time_in_ns, src_profile_amplitude)
-
         curr_delta_min = 1.e8
         curr_delta_max = -1.e-8
         amp_last = 0; 
@@ -343,6 +342,11 @@ class CurrWaveform:
         for i in range (0, numOfUnit):
             time_ = i * self.T_clk_in_ns
             amp_ = func_intep(time_)
+
+            ##### temp skip some units
+            # if time_ > 5000. and  time_ < 24000:
+            #     continue
+            ##### temp skip some units end 
             #### current amplitude scaled such that charge is const
             if self.is_clk_eff :
                 self.AddOneUnit(amp_ * self.r_curr_mag_scale_fac_charge_consv_h2, amp_ * self.r_curr_mag_scale_fac_charge_consv_h1, i)  
