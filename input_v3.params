@@ -4,15 +4,16 @@
 #INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | skip_first_n_data  | with_clk?1|0   | < | clk conti| clk skip | this_freq_in_GHz >
 #INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor  < | clk conti| clk skip | this_freq_in_GHz >
 #INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type G delay: Time_Length_in_ns | current_amplitude 
 #INFO: CLK_Freq unit: GHz
 #INFO: 0. < CLK_DutyCycle < 1.
 #INFO: 0. < CLK_T_RISE_as_ratio_of_CLK_Freq < 1.
 #INFO: 0. < CLK_T_FALL_as_ratio_of_CLK_Freq < 1.
 #INFO: 0. < (CLK_T_RISE_as_ratio_of_CLK_Freq + CLK_T_FALL_as_ratio_of_CLK_Freq) < CLK_DutyCycle
 
-VDD_in_Volt  0.78
+VDD_in_Volt  0.75
 PROFILE_POWER_0_OR_CURR_1   0
-CLK_Freq_in_GHz    2.0
+CLK_Freq_in_GHz    2.
 CLK_DutyCycle 0.9
 CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
 CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
@@ -21,7 +22,9 @@ CLK_EDGE_EFF N
 #INFO: Time_Length_in_ns  #Waveform_type  #Waveform_params
 
 ## NOTE: one PA tile 
-#A   10          0.      0.0
+#A   250      0.      0.0
+#B   64       0.  110.    0.0
+#A   1000    110.    0.0    
 #B   300         0.      1.54    0.0
 #B   100         1.54     12.     0.0
 #A   10000       12.     0.0
@@ -31,14 +34,33 @@ CLK_EDGE_EFF N
 
 
 ## NOTE: this is POWER, NOT current, for PA  block: pNNE_PA;    MA block: pGMEM
-A   10  0  0    
-#B   100  0   20    0 
-#B   100  20   7    0 
-#B   150  20  10    0
-#E   1000 8  12   0
-C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0518_200clk_0scale_continue_idle_clk.pkl  1.e-12   1.     0.  1.     0.25    TS_ps   pNNE_PA    0
+#A   10  0  0    
+#C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0518_200clk_0scale_continue_idle_clk.pkl  1.e-12   1.     0.  1.     0.25    TS_ps   pNNE_PA    0
+##A    3000 20   0
+##B   200  20  0    0  
+
+
+## NOTE: this is POWER, NOT current, for PA  block: pNNE_PA;    MA block: pGMEM, no transition in power profile, time use 80.e-12, CLK_Freq_in_GHz use 0.025, such that dT in 10ns
+#A   10  0  0    
+#C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0515_0clk_0scale_continue_idle_clk_51501.pkl  80.e-12   1.     0.  1.     0.25    TS_ps   pNNE_PA    0
+##A    3000 20   0
+##B   200  20  0    0  
+
+## NOTE: if it is NO ramping, and ramp up in 1 clk cycle, need to scale by (1/CLK_T_RISE_as_ratio_of_CLK_Freq) to avoid artificial ramp up
+## NOTE: this is POWER, NOT current, for PA  block: pNNE_PA;    MA block: pGMEM, no transition in power profile   ==> slow down dt, can use slower sampling freq inverse to time scaler
+#A   1000  0  0    
+#C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2_0515_0clk_0scale_continue_idle_clk_51501.pkl  1280.e-12   1.     0.  1.     0.25    TS_ps   pGMEM    0
 #A    3000 20   0
 #B   200  20  0    0  
+
+
+## NOTE: for dI dt event emulation
+#A   10      0.   0.
+#B   335     0   9.52    0.
+#B   100     9.52    53  0.
+#A   4000    53.  0.
+#B   120     53.     9.52    0.
+#B   300     9.52    0.  0.
 
 ## NOTE: for stall experiment
 #A   10  0  0
@@ -66,3 +88,29 @@ C   C:\Users\jiangongwei\Documents\Python_data\NNE_power_trace_test4_act_0p3_0p2
 #A   5000.    60.     60.    0.
 #B   200.    60.    0.     0.
 #A   2000.    0.0     0.
+
+
+## NOTE: 20240117 Rahul PA total power, 0.25 weight is for 1 blk, continue to scale baesd on power 
+#D   C:\Users\jiangongwei\Documents\Python_data\power_trace_noramp_240117.txt    1.      1.      0.  1.  0.25  0  0
+#D   C:\Users\jiangongwei\Documents\Python_data\power_trace_ramp_32clk.csv    1.      1.      0.  1.  0.25  0  0
+#D   C:\Users\jiangongwei\Documents\Python_data\power_trace_ramp_64clk.csv    1.      1.      0.  1.  0.25  0  0
+#D   C:\Users\jiangongwei\Documents\Python_data\power_trace_ramp_128clk.csv    1.      1.      0.  1.  0.25  0  0
+#D   C:\Users\jiangongwei\Documents\Python_data\power_trace_ramp_256clk.csv    1.      1.      0.  1.  0.25  0  0
+
+## NOTE: 20240117 Rahul PA total power, 0.25 weight is for 1 blk, continue to scale baesd on power 
+#D   C:\Users\jiangongwei\Documents\Python_data\power_trace_ramp_128clk.csv  1.      1.      0.  1.  1.0  0  0
+#D   C:\Users\jiangongwei\Documents\Python_data\power_trace_80W_ramp_128clk.csv   1.      1.      0.  1.  1.0  0  0
+
+#G   50000  0.
+#B   300     0   44    0.
+#B   200     44    44  0.
+#D   C:\Users\jiangongwei\Documents\Python_data\power_trace_80W_ramp_16clk.csv  1.      1.      0.  1.  1.0  0  0
+
+# 240207 Puru trace, Rahul processed, vdd 0.75V, 85C, check mag scaling factor 
+D   C:\Users\jiangongwei\Documents\Python_data\PA_Trace_FSDB_02_07.csv  1.e-9     1.      0.  1.  0.762  0  0
+B   500 0   0   0
+
+## 240207 Puru trace, Rahul processed, vdd 0.75V, 85C, add delay for LTspice 
+#G 50000 0.
+#D   C:\Users\jiangongwei\Documents\Python_data\PA_Trace_FSDB_02_07.csv  1.e-9     1.      0.  1.  1.  0  0
+#B   500 0   0   0

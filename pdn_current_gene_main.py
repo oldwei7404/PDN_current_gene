@@ -1,5 +1,7 @@
 # This script is intended for PDN current profile generation, manipulation 
 # It can support following type of waveforms.
+### NOTE: CLK_Freq_in_GHz needs to inversely scaled by the factor used to scale Time_unit_in_sec 
+
 #INFO: waveform_type A constant_clk:    Time_Length_in_ns | current_amplitude | current_floor < | clk conti| clk skip | this_freq_in_GHz >
 #INFO: waveform_type B linear_slope_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor < | clk conti| clk skip | this_freq_in_GHz >
 #INFO: waveform_type C scaled profile in .pkl:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | col_clk | col_data | skip_first_n_data  < | clk conti| clk skip | this_freq_in_GHz >
@@ -7,7 +9,7 @@
 #INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor  < | clk conti| clk skip | this_freq_in_GHz >
 #INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end < | clk conti| clk skip | this_freq_in_GHz >
 
-#INFO: CLK_Freq unit: GHz
+#INFO: CLK_Freq unit: GHz, it does NOT have to be logic freq, one can use lower number to reduce sampling freq
 #INFO: 0. < CLK_DutyCycle < 1.
 #INFO: 0. < CLK_T_RISE_as_ratio_of_CLK_Freq < 1.
 #INFO: 0. < CLK_T_FALL_as_ratio_of_CLK_Freq < 1.
@@ -229,6 +231,13 @@ class CurrWaveform:
         self.T_clk = 1./self.clk_freq
         self.T_clk_in_ns = self.T_clk * 1.e9      
 
+    def AddDelayWF(self, delay_wf_length_ns, delay_wf_curr):
+        tStart = self.currWaveform_list_time_ns[-1]
+        self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.t_rise_ratio_T)
+        self.currWaveform_list_curr_Amp.append(delay_wf_curr)
+
+        self.currWaveform_list_time_ns.append(tStart + self.T_clk_in_ns * self.t_rise_ratio_T + delay_wf_length_ns)
+        self.currWaveform_list_curr_Amp.append(delay_wf_curr)
 
     ### Function: Add one unit
     ### Optional clk gating: parameters after "I_floor_ratio" is optional to enable clk gating
@@ -344,9 +353,16 @@ class CurrWaveform:
             amp_ = func_intep(time_)
 
             ##### temp skip some units
-            # if time_ > 5000. and  time_ < 24000:
+            # skip_adj = self.src_profile_envelope_time_unit_in_sec * 1.e12
+            # # print('DeBuG: skip_adj = ', skip_adj)
+            # if time_ > 5000. * skip_adj and  time_ < 24000 * skip_adj:
             #     continue
+            # elif time_ > 34000. * skip_adj and  time_ < 40000 * skip_adj:
+            #     continue
+            # elif time_> 60000 * skip_adj:
+            #     continue 
             ##### temp skip some units end 
+
             #### current amplitude scaled such that charge is const
             if self.is_clk_eff :
                 self.AddOneUnit(amp_ * self.r_curr_mag_scale_fac_charge_consv_h2, amp_ * self.r_curr_mag_scale_fac_charge_consv_h1, i)  
@@ -383,11 +399,14 @@ class CurrWaveform:
             data_cnt = 0
             while cln_str:
                 cln_str_src = cln_str.lstrip(' ').rstrip('\n')
-                if cln_str_src == '' or cln_str_src[0] == '#': ### skip empty line or lines start with #
+                if cln_str_src == '' or cln_str_src[0] == '#' or 'time' in cln_str_src or 'TIME' in cln_str_src or 'Time' in cln_str_src: ### skip empty line or lines start with #, or 'time'
                     cln_str = fin.readline()
                     continue    
-
-                cln_str = cln_str_src.split()   
+                if ',' in cln_str:
+                    cln_str = cln_str_src.split(',') 
+                else:   
+                    cln_str = cln_str_src.split()
+                
                 time_ns = float(cln_str[0]) * self.src_profile_envelope_time_unit_in_sec * 1.e9
                 data_cnt = data_cnt + 1
 
@@ -420,6 +439,23 @@ class CurrWaveform:
         for i in range (0, numOfUnit):
             time_ = i * self.T_clk_in_ns
             amp_ = func_intep(time_)
+
+            ##### temp skip some units
+            # skip_adj = self.src_profile_envelope_time_unit_in_sec * 1.e12
+            skip_adj = 1
+            # print('DeBuG: skip_adj = ', skip_adj)
+            
+            if time_ > 1000. * skip_adj and  time_ < 24000 * skip_adj:
+                continue
+            elif time_ > 29000. * skip_adj and  time_ < 32000 * skip_adj:
+                continue
+            elif time_ > 35000. * skip_adj and  time_ < 38000 * skip_adj:
+                continue
+            elif time_> 48000 * skip_adj:
+                continue 
+            ##### temp skip some units end 
+
+
             #### current amplitude scaled such that charge is const
             if self.is_clk_eff:
                 self.AddOneUnit(amp_ * self.r_curr_mag_scale_fac_charge_consv_h2, amp_ * self.r_curr_mag_scale_fac_charge_consv_h1, i)      
@@ -579,7 +615,14 @@ class CurrWaveform:
                     self.AddLinearSlopeCurr_noClk(numOfUnit, I_start, I_end)
                 self.ClkGatingClear()
                 self.RestoreFreq()
-
+            elif wfp[0] == 'G':
+                if len(wfp) < 2:
+                    print("#ERROR: waveform type G parameters insufficient: " + wfp_orig)
+                    sys.exit(1)
+                else:
+                    delay_wf_length_ns = float( wfp[1])
+                    delay_wf_curr = float( wfp[2])
+                    self.AddDelayWF(delay_wf_length_ns, delay_wf_curr )
 
 
 
@@ -621,6 +664,20 @@ class CurrWaveform:
         leng_rcd = len( self.currWaveform_list_time_ns)
         for i in range(0, leng_rcd):
             fout.write(str(self.currWaveform_list_time_ns[i]) + 'e-9, \t' + str(self.currWaveform_list_curr_Amp[i]) + '\t\n')  
+
+        fout.close()
+        print('#INFO: Current waveform output as PWL to ' + fileName)
+
+    def WriteWaveform_ToSimplis(self, fileName):
+        fileName = fileName + '_simplis.csv'
+        fout = open(fileName, 'w+')
+        leng_rcd = len( self.currWaveform_list_time_ns)
+        if leng_rcd > 1e5:
+            print('\n\n#WARNING: SIMPLIS cannot take more than 1e5 data points ! ' + str(leng_rcd) +' data points exported \n\n')
+
+        fout.write('START_DATA SHIFT_FIRST_TO_ZERO FORMAT=CSV,\n')
+        for i in range(0, leng_rcd):
+            fout.write(str(self.currWaveform_list_time_ns[i]) + 'e-9, "\t' + str(self.currWaveform_list_curr_Amp[i]) + ' "\t\n')  
 
         fout.close()
         print('#INFO: Current waveform output as PWL to ' + fileName)
@@ -687,6 +744,7 @@ waveformInst.CompositeWaveform()
 waveformInst.WriteWaveform(file_out_waveform)
 waveformInst.WriteWaveform_InTimFormat(file_out_waveform)
 waveformInst.WriteWaveform_ToCSV(file_out_waveform)
+waveformInst.WriteWaveform_ToSimplis(file_out_waveform)
 
 if is_print_wf:
     waveformInst.PlotWaveform()
