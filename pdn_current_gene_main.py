@@ -43,6 +43,8 @@
 ### END example input.params
 
 import os, sys, getopt
+import stat
+from stat import S_IREAD, S_IRGRP, S_IROTH
 # import math, cmath
 # import shutil
 import matplotlib.pyplot as plt
@@ -56,7 +58,7 @@ file_out_waveform = ""
 voltage = 0.
 waveform_params_list = []
 is_print_wf = False
-
+ 
 ###
 class CurrWaveform:
     currWaveform_list_time_ns = []  # unit: ns
@@ -625,7 +627,6 @@ class CurrWaveform:
                     self.AddDelayWF(delay_wf_length_ns, delay_wf_curr )
 
 
-
     def WriteWaveform(self, fileName):
         fout = open(fileName, 'w+')
         #fout.write('*Time(s) \t Current(Amp)\n')
@@ -670,6 +671,11 @@ class CurrWaveform:
 
     def WriteWaveform_ToSimplis(self, fileName):
         fileName = fileName + '_simplis.csv'
+
+        if os.path.isfile(fileName):
+            os.chmod(fileName, stat.S_IWRITE)
+            os.remove(fileName)
+
         fout = open(fileName, 'w+')
         leng_rcd = len( self.currWaveform_list_time_ns)
         if leng_rcd > 1e5:
@@ -680,7 +686,10 @@ class CurrWaveform:
             fout.write(str(self.currWaveform_list_time_ns[i]) + 'e-9, "\t' + str(self.currWaveform_list_curr_Amp[i]) + ' "\t\n')  
 
         fout.close()
-        print('#INFO: Current waveform output as PWL to ' + fileName)
+        # NOTE: simplis output fomrat files are made read only due to SIMPLIS tends to change file in run
+        
+        os.chmod(fileName, S_IREAD|S_IRGRP|S_IROTH)
+        print('#INFO: Current waveform output as PWL to READ ONLY file : ' + fileName)
 
     def PlotWaveform(self):
         plt.rcParams.update({'font.size': 15})
@@ -741,8 +750,8 @@ print('\n#INFO: Start to run waveform generation !')
 
 waveformInst = CurrWaveform(file_in_para)
 waveformInst.CompositeWaveform()
-waveformInst.WriteWaveform(file_out_waveform)
-waveformInst.WriteWaveform_InTimFormat(file_out_waveform)
+# waveformInst.WriteWaveform(file_out_waveform)
+# waveformInst.WriteWaveform_InTimFormat(file_out_waveform)
 waveformInst.WriteWaveform_ToCSV(file_out_waveform)
 waveformInst.WriteWaveform_ToSimplis(file_out_waveform)
 

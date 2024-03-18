@@ -10,7 +10,7 @@
 #INFO: 0. < CLK_T_FALL_as_ratio_of_CLK_Freq < 1.
 #INFO: 0. < (CLK_T_RISE_as_ratio_of_CLK_Freq + CLK_T_FALL_as_ratio_of_CLK_Freq) < CLK_DutyCycle
 
-VDD_in_Volt  0.822
+VDD_in_Volt  0.8
 PROFILE_POWER_0_OR_CURR_1   0
 CLK_Freq_in_GHz    2.5
 CLK_DutyCycle 0.9
@@ -75,21 +75,21 @@ CLK_EDGE_EFF N
 
 # NOTE: 14 core CPU  =============!!!! waveforms are POWER, NOT current, need to set power and voltage above !!! ===================
 # NOTE: time unit in profile chagne from sections to sections 
-B    100   0   14  0
-B    1000   14   14  0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectUp.txt  7.e-10   1.  0.     1.   1.1      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.1      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.1      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.1      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.1      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.1      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectDown.txt  7.e-10   1.  0.     1.   1.1      0   0
-B    200   14.5  14  0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectUp.txt  7.e-10   1.  0.     1.   1.1      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.1      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.1      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.1      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.1      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.1      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectDown.txt  7.e-10   1.  0.     1.   1.1      0   0
-B    500    14  14   0
+B    1000   0   23  0
+B    1000   23   23  0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectUp.txt  7.e-10   1.  0.     1.   1.65      0   0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectDown.txt  7.e-10   1.  0.     1.   1.65      0   0
+B    1000   23  23  0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectUp.txt  7.e-10   1.  0.     1.   1.65      0   0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectDown.txt  7.e-10   1.  0.     1.   1.65      0   0
+B    500    23  14   0
