@@ -672,6 +672,7 @@ class CurrWaveform:
     def WriteWaveform_ToSimplis(self, fileName):
         fileName = fileName + '_simplis.csv'
 
+        # NOTE: remove existing SIMPLIS file, if found
         if os.path.isfile(fileName):
             os.chmod(fileName, stat.S_IWRITE)
             os.remove(fileName)
@@ -686,8 +687,8 @@ class CurrWaveform:
             fout.write(str(self.currWaveform_list_time_ns[i]) + 'e-9, "\t' + str(self.currWaveform_list_curr_Amp[i]) + ' "\t\n')  
 
         fout.close()
-        # NOTE: simplis output fomrat files are made read only due to SIMPLIS tends to change file in run
-        
+
+        # NOTE: simplis output fomrat files are made read only due to SIMPLIS tends to change file in run        
         os.chmod(fileName, S_IREAD|S_IRGRP|S_IROTH)
         print('#INFO: Current waveform output as PWL to READ ONLY file : ' + fileName)
 
