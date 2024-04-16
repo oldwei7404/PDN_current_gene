@@ -443,18 +443,18 @@ class CurrWaveform:
             amp_ = func_intep(time_)
 
             ##### temp skip some units
-            # skip_adj = self.src_profile_envelope_time_unit_in_sec * 1.e12
-            skip_adj = 1
-            # print('DeBuG: skip_adj = ', skip_adj)
+            # # skip_adj = self.src_profile_envelope_time_unit_in_sec * 1.e12
+            # skip_adj = 1
+            # # print('DeBuG: skip_adj = ', skip_adj)
             
-            if time_ > 1000. * skip_adj and  time_ < 24000 * skip_adj:
-                continue
-            elif time_ > 29000. * skip_adj and  time_ < 32000 * skip_adj:
-                continue
-            elif time_ > 35000. * skip_adj and  time_ < 38000 * skip_adj:
-                continue
-            elif time_> 48000 * skip_adj:
-                continue 
+            # if time_ > 1000. * skip_adj and  time_ < 24000 * skip_adj:
+            #     continue
+            # elif time_ > 29000. * skip_adj and  time_ < 32000 * skip_adj:
+            #     continue
+            # elif time_ > 35000. * skip_adj and  time_ < 38000 * skip_adj:
+            #     continue
+            # elif time_> 48000 * skip_adj:
+            #     continue 
             ##### temp skip some units end 
 
 
