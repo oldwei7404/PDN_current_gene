@@ -8,6 +8,8 @@
 #INFO: waveform_type D scaled profile:  "file path to envelope source (no space allowed)" | Time_unit_in_sec | Waveform_in_metric_unit | current_floor | time_scaling_factor | mag_scaling_factor | skip_first_n_data  < | clk conti| clk skip | this_freq_in_GHz >
 #INFO: waveform_type E random btw low/up bound: Time_Length_in_ns | current_low_bound | current_up_bound | current_floor  < | clk conti| clk skip | this_freq_in_GHz >
 #INFO: waveform_type F linear_slope_no_clk: Time_Length_in_ns | current_amplitude_start | current_amplitude_end < | clk conti| clk skip | this_freq_in_GHz >
+#INFO: waveform_type G delay: Time_Length_in_ns | current_amplitude 
+#INFO: waveform_type H linear slope with random noise: Time_Length_in_ns | current_amplitude_start | current_amplitude_end |current_floor | lower noise diviation | upper noise deviation 
 
 #INFO: CLK_Freq unit: GHz, it does NOT have to be logic freq, one can use lower number to reduce sampling freq
 #INFO: 0. < CLK_DutyCycle < 1.
@@ -301,11 +303,17 @@ class CurrWaveform:
             else:
                 self.AddOneUnit(I_tmp, I_tmp, i)
     
-    def AddLinearSlopeCurr_noClk(self, numOfUnit, I_start, I_end):
+    def AddLinearSlopeCurr_noClk(self, numOfUnit, I_start, I_end, I_bd_lo = 0., I_bd_up = 0.):
+        rng = numpy.random.default_rng()
+        currValList = rng.random((numOfUnit))
+
         ### Note: no clk is involved, hence no current scaling 
         I_step = (I_end - I_start)/numOfUnit
         for i in range(0, numOfUnit):
             I_tmp = I_start + (i+1) * I_step
+            I_noise = I_bd_lo + (I_bd_up - I_bd_lo) * currValList[i]
+            I_tmp = I_tmp + I_noise
+
             tStart = self.currWaveform_list_time_ns[-1]
             self.currWaveform_list_time_ns.append(tStart + 0.25 * self.T_clk_in_ns)
             self.currWaveform_list_curr_Amp.append(I_tmp + 0.25 * I_step)
@@ -625,6 +633,27 @@ class CurrWaveform:
                     delay_wf_length_ns = float( wfp[1])
                     delay_wf_curr = float( wfp[2])
                     self.AddDelayWF(delay_wf_length_ns, delay_wf_curr )
+
+            elif wfp[0] == 'H':
+                if len(wfp) < 7:
+                    print("#ERROR: waveform type H parameters insufficient: " + wfp_orig)
+                    sys.exit(1)
+                else:
+                    I_start = float( wfp[2])
+                    I_end = float( wfp[3])
+                    I_floor_ratio = float( wfp[4])          
+                    I_bd_lo = float(wfp[5])
+                    I_bd_up = float(wfp[6])
+
+                    if I_bd_lo > I_bd_up:
+                        tmp = I_bd_lo
+                        I_bd_lo = I_bd_up
+                        I_bd_up = tmp 
+
+                    self.UpdateClkEdgeWaveformPara(I_floor_ratio)
+                    self.AddLinearSlopeCurr_noClk(numOfUnit, I_start, I_end, I_bd_lo, I_bd_up)               
+                self.ClkGatingClear()
+                self.RestoreFreq()
 
 
     def WriteWaveform(self, fileName):

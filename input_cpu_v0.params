@@ -12,7 +12,7 @@
 
 VDD_in_Volt  0.8
 PROFILE_POWER_0_OR_CURR_1   0
-CLK_Freq_in_GHz    2.5
+CLK_Freq_in_GHz    1.
 CLK_DutyCycle 0.9
 CLK_T_RISE_as_ratio_of_CLK_Freq 0.25
 CLK_T_FALL_as_ratio_of_CLK_Freq 0.25
@@ -75,21 +75,70 @@ CLK_EDGE_EFF N
 
 # NOTE: 14 core CPU  =============!!!! waveforms are POWER, NOT current, need to set power and voltage above !!! ===================
 # NOTE: time unit in profile chagne from sections to sections 
-B    1000   0   23  0
-B    1000   23   23  0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectUp.txt  7.e-10   1.  0.     1.   1.65      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectDown.txt  7.e-10   1.  0.     1.   1.65      0   0
-B    1000   23  23  0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectUp.txt  7.e-10   1.  0.     1.   1.65      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
-D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectDown.txt  7.e-10   1.  0.     1.   1.65      0   0
-B    500    23  14   0
+#B    1000   0   23  0
+#B    1000   23   23  0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectUp.txt  1.e-10   1.  0.     1.   1.65      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_low_high_2.5GHz_240105_2_sectDown.txt  1.e-10   1.  0.     1.   1.65      0   0
+#B    1000   23  23  0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectUp.txt  1.e-10   1.  0.     1.   1.65      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectMid.txt  1.e-10   1.  0.     1.   1.65      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2.5GHz_240105_2_sectDown.txt  1.e-10   1.  0.     1.   1.65      0   0
+#B    500    23  14   0
+
+# NOTE: for Ting 240314 calc 
+#B    100 0   0   0
+#B    17  0  8   0
+#B    500 8   8   0
+
+
+## NOTE: 240327 Andes CPU profile 
+#B    100   2.6   2.6  0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_1Of3_2CoreX7.csv  1.e-10   1.  0.     1.   1.36      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2Of3_14Core_FSDB_drct.csv   1.e-10   1.  0.     1.   1.36      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_3Of3_2CoreX7.csv  1.e-10   1.  0.     1.   1.36      0   0
+#B    100   2.6   2.6  0                                                                                  
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_1Of3_2CoreX7.csv  1.e-10   1.  0.     1.   1.36      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2Of3_14Core_FSDB_drct.csv   1.e-10   1.  0.     1.   1.36      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_3Of3_2CoreX7.csv  1.e-10   1.  0.     1.   1.36      0   0
+#B    100   2.6   2.6  0                                                                                  
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_1Of3_2CoreX7.csv  1.e-10   1.  0.     1.   1.36      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2Of3_14Core_FSDB_drct.csv   1.e-10   1.  0.     1.   1.36      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_3Of3_2CoreX7.csv  1.e-10   1.  0.     1.   1.36      0   0
+#B    100   2.6   2.6  0                                                                                  
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_1Of3_2CoreX7.csv  1.e-10   1.  0.     1.   1.36      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2Of3_14Core_FSDB_drct.csv   1.e-10   1.  0.     1.   1.36      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_3Of3_2CoreX7.csv  1.e-10   1.  0.     1.   1.36      0   0
+#B    100   2.6   2.6  0                                                                                  
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_1Of3_2CoreX7.csv  1.e-10   1.  0.     1.   1.36      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_2Of3_14Core_FSDB_drct.csv   1.e-10   1.  0.     1.   1.36      0   0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_3Of3_2CoreX7.csv  1.e-10   1.  0.     1.   1.36      0   0
+#B    1000   2.6   2.6  0 
+
+
+## NOTE: 240327 Andes CPU profile, DSU + 2xCore, or 2XCoreX1.2  (such that 12 cores in 5 CPM partition)
+#B   500   2.4   2.4  0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_SteadyStateDurationX6_DSU_2xCore.csv  1.e-10   1.  0.     1.   1.      0   0
+#B   500   2.4   2.4  0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_SteadyStateDurationX6_DSU_2xCore.csv  1.e-10   1.  0.     1.   1.      0   0
+#B   500   2.4   2.4  0
+#D   C:\Users\jiangongwei\Documents\Python_data\di_dt_high_low_SteadyStateDurationX6_DSU_2xCore.csv  1.e-10   1.  0.     1.   1.      0   0
+#B   1000   2.4   2.4  0
+
+## NOTE: GPU all
+#B   500     1.2     1.2     0.
+#B   100      1.2     13.3    0.
+#E   7000    10.6    16.0    0.
+
+## NOTE: GPU 1 of 4
+B   500     0.3     0.3     0.
+B   100      0.3     4.11    0.
+E   8000    3.5    4.7    0.
