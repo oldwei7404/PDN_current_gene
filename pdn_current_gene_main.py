@@ -68,7 +68,7 @@ class CurrWaveform:
     waveform_params_list = []
 
     profile_power_0_or_curr_1 = 0
-
+    profile_rpt_num = 1
     ### list of for scaling profiles, can support multiple profiles
     src_profile_envelope_fileName = ""
     src_profile_envelope_time_unit_in_sec = 1.
@@ -230,10 +230,11 @@ class CurrWaveform:
         self.T_clk = 1./self.clk_freq
         self.T_clk_in_ns = self.T_clk * 1.e9
 
-    def RestoreFreq(self):
+    def Restore(self):
         self.clk_freq = self.clk_freq_norm
         self.T_clk = 1./self.clk_freq
         self.T_clk_in_ns = self.T_clk * 1.e9      
+        self.profile_rpt_num = 1
 
     def AddDelayWF(self, delay_wf_length_ns, delay_wf_curr):
         tStart = self.currWaveform_list_time_ns[-1]
@@ -446,38 +447,39 @@ class CurrWaveform:
         curr_delta_max = -1.e-8
         amp_last = 0; 
 
-        for i in range (0, numOfUnit):
-            time_ = i * self.T_clk_in_ns
-            amp_ = func_intep(time_)
+        for rpt_cnt in range(0, self.profile_rpt_num):
+            for i in range (0, numOfUnit):
+                time_ = i * self.T_clk_in_ns
+                amp_ = func_intep(time_)
 
-            ##### temp skip some units
-            # # skip_adj = self.src_profile_envelope_time_unit_in_sec * 1.e12
-            # skip_adj = 1
-            # # print('DeBuG: skip_adj = ', skip_adj)
-            
-            # if time_ > 1000. * skip_adj and  time_ < 24000 * skip_adj:
-            #     continue
-            # elif time_ > 29000. * skip_adj and  time_ < 32000 * skip_adj:
-            #     continue
-            # elif time_ > 35000. * skip_adj and  time_ < 38000 * skip_adj:
-            #     continue
-            # elif time_> 48000 * skip_adj:
-            #     continue 
-            ##### temp skip some units end 
+                ##### temp skip some units
+                # # skip_adj = self.src_profile_envelope_time_unit_in_sec * 1.e12
+                # skip_adj = 1
+                # # print('DeBuG: skip_adj = ', skip_adj)
+                
+                # if time_ > 1000. * skip_adj and  time_ < 24000 * skip_adj:
+                #     continue
+                # elif time_ > 29000. * skip_adj and  time_ < 32000 * skip_adj:
+                #     continue
+                # elif time_ > 35000. * skip_adj and  time_ < 38000 * skip_adj:
+                #     continue
+                # elif time_> 48000 * skip_adj:
+                #     continue 
+                ##### temp skip some units end 
 
 
-            #### current amplitude scaled such that charge is const
-            if self.is_clk_eff:
-                self.AddOneUnit(amp_ * self.r_curr_mag_scale_fac_charge_consv_h2, amp_ * self.r_curr_mag_scale_fac_charge_consv_h1, i)      
-            else:
-                self.AddOneUnit(amp_, amp_, i)  
+                #### current amplitude scaled such that charge is const
+                if self.is_clk_eff:
+                    self.AddOneUnit(amp_ * self.r_curr_mag_scale_fac_charge_consv_h2, amp_ * self.r_curr_mag_scale_fac_charge_consv_h1, i)      
+                else:
+                    self.AddOneUnit(amp_, amp_, i)  
 
-            curr_delta = amp_ - amp_last
-            if curr_delta > curr_delta_max:
-                curr_delta_max = curr_delta
-            if curr_delta < curr_delta_min:
-                curr_delta_min = curr_delta
-            amp_last = amp_ 
+                curr_delta = amp_ - amp_last
+                if curr_delta > curr_delta_max:
+                    curr_delta_max = curr_delta
+                if curr_delta < curr_delta_min:
+                    curr_delta_min = curr_delta
+                amp_last = amp_ 
 
         print('#INFO: scaled worst pos. delta current per cycle(before charge scaling): '+str(curr_delta_max) + ',scaled worst neg. delta current per cycle(before charge scaling): ' + str(curr_delta_min) )
 
@@ -519,7 +521,7 @@ class CurrWaveform:
                     self.UpdateClkEdgeWaveformPara(I_floor_ratio)
                     self.AddConstCLK(numOfUnit, I_curr )
                 self.ClkGatingClear()
-                self.RestoreFreq()
+                self.Restore()
 
             elif wfp[0] == 'B':
                 if len(wfp) < 5:
@@ -537,7 +539,7 @@ class CurrWaveform:
                     self.UpdateClkEdgeWaveformPara(I_floor_ratio)
                     self.AddLinearSlopeCurr(numOfUnit, I_start, I_end)               
                 self.ClkGatingClear()
-                self.RestoreFreq()
+                self.Restore()
 
             elif wfp[0] == 'C': 
                 if len(wfp) < 10:
@@ -563,7 +565,7 @@ class CurrWaveform:
                     self.AddScalingCurr_waveformC()
                 self.ClkGatingClear()
                 self.ClearWaveformInfo()
-                self.RestoreFreq()
+                self.Restore()
                 
             elif wfp[0] == 'D': 
                 if len(wfp) < 8:
@@ -581,12 +583,15 @@ class CurrWaveform:
                     if len(wfp) == 11:
                         self.ReadClkGatingInfo(int( wfp[8]), int( wfp[9]), 'D')
                         self.UpdateFreq(float(wfp[10]))
+                    
+                    if wfp[-2] == 'R':    ### repeat waveform 
+                        self.profile_rpt_num = int(wfp[-1])
 
                     self.UpdateClkEdgeWaveformPara(I_floor_ratio)
                     self.AddScalingCurr_waveformD()
                 self.ClkGatingClear()
                 self.ClearWaveformInfo()
-                self.RestoreFreq()
+                self.Restore()
 
             elif wfp[0] == 'E':
                 if len(wfp) < 5:
@@ -608,7 +613,7 @@ class CurrWaveform:
                     self.UpdateClkEdgeWaveformPara(I_floor_ratio)
                     self.AddRandWithinRange(numOfUnit, I_bd_lo, I_bd_up)
                 self.ClkGatingClear()
-                self.RestoreFreq()
+                self.Restore()
 
             elif wfp[0] == 'F':
                 if len(wfp) < 4:
@@ -624,7 +629,7 @@ class CurrWaveform:
 
                     self.AddLinearSlopeCurr_noClk(numOfUnit, I_start, I_end)
                 self.ClkGatingClear()
-                self.RestoreFreq()
+                self.Restore()
             elif wfp[0] == 'G':
                 if len(wfp) < 2:
                     print("#ERROR: waveform type G parameters insufficient: " + wfp_orig)
@@ -653,7 +658,7 @@ class CurrWaveform:
                     self.UpdateClkEdgeWaveformPara(I_floor_ratio)
                     self.AddLinearSlopeCurr_noClk(numOfUnit, I_start, I_end, I_bd_lo, I_bd_up)               
                 self.ClkGatingClear()
-                self.RestoreFreq()
+                self.Restore()
 
 
     def WriteWaveform(self, fileName):
@@ -693,7 +698,7 @@ class CurrWaveform:
         fout = open(fileName, 'w+')
         leng_rcd = len( self.currWaveform_list_time_ns)
         for i in range(0, leng_rcd):
-            fout.write(str(self.currWaveform_list_time_ns[i]) + 'e-9, \t' + str(self.currWaveform_list_curr_Amp[i]) + '\t\n')  
+            fout.write(str(self.currWaveform_list_time_ns[i]) + 'e-9,' + str(self.currWaveform_list_curr_Amp[i]) + '\n')  
 
         fout.close()
         print('#INFO: Current waveform output as PWL to ' + fileName)
