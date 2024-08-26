@@ -714,7 +714,8 @@ class CurrWaveform:
         fout = open(fileName, 'w+')
         leng_rcd = len( self.currWaveform_list_time_ns)
         if leng_rcd > 1e5:
-            print('\n\n#WARNING: SIMPLIS cannot take more than 1e5 data points ! ' + str(leng_rcd) +' data points exported \n\n')
+            leng_rcd = 100000
+            print('\n\n#WARNING: SIMPLIS cannot take more than 1e5 data points ! ' + str(leng_rcd) +' data points exported, time stops at ' +  str(self.currWaveform_list_time_ns[leng_rcd-1]) + ' ns\n\n')
 
         fout.write('START_DATA SHIFT_FIRST_TO_ZERO FORMAT=CSV,\n')
         for i in range(0, leng_rcd):
